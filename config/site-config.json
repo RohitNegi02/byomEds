@@ -2,7 +2,7 @@
     "version": 3,
     "code": {
         "owner": "larsauffarth",
-        "repo": "byom-demo",
+        "repo": "byomeds",
         "source": {
             "type": "github",
             "url": "https://github.com/rohitnegi02/byomeds"
