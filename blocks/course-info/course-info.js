@@ -110,24 +110,39 @@ export default function decorate(block) {
   
   // Check if course data is available
   if (!courseData.courseId) {
-    block.innerHTML = `
-      <div class="course-info-error">
-        <h3>⚠️ No Course Data Available</h3>
-        <p>This block requires course meta tags to be present in the page head.</p>
-        <p>Meta tags are typically injected by the App Builder overlay action.</p>
-        <details>
-          <summary>Expected Meta Tags</summary>
-          <ul>
-            <li><code>&lt;meta name="course-id" content="course:123456"&gt;</code></li>
-            <li><code>&lt;meta name="course-title" content="Course Title"&gt;</code></li>
-            <li><code>&lt;meta name="course-duration" content="30m"&gt;</code></li>
-            <li><code>&lt;meta name="course-skill-level" content="Beginner"&gt;</code></li>
-            <li><code>&lt;meta name="course-skills" content="Skill1, Skill2"&gt;</code></li>
-            <li><code>&lt;meta name="description" content="Course description"&gt;</code></li>
-          </ul>
-        </details>
-      </div>
-    `;
+    // Check if we're on a course page URL pattern
+    const isCoursePage = window.location.pathname.includes('/overview/trainingId/') || 
+                        window.location.pathname.includes('/course/');
+    
+    if (isCoursePage) {
+      // On a course page but no meta tags - show loading state
+      block.innerHTML = `
+        <div class="course-info-loading">
+          <h3>🔄 Loading Course Information...</h3>
+          <p>Waiting for course data to be loaded by the overlay action.</p>
+          <div class="loading-spinner"></div>
+        </div>
+      `;
+      
+      // Try to reload course data after a delay
+      setTimeout(() => {
+        const retryData = getCourseDataFromMeta();
+        if (retryData.courseId) {
+          decorate(block); // Retry decoration
+        }
+      }, 2000);
+    } else {
+      // Not on a course page - show helpful message
+      block.innerHTML = `
+        <div class="course-info-placeholder">
+          <h3>📚 Course Information Block</h3>
+          <p>This block displays course information when viewing a course page.</p>
+          <p>Navigate to a course URL like:</p>
+          <code>/overview/trainingId/7235188/trainingInstanceId/7235188-7875849</code>
+          <p><small>Course data is provided by the App Builder overlay action.</small></p>
+        </div>
+      `;
+    }
     return;
   }
   
