@@ -2,35 +2,38 @@ version: 1
 indices:
   pages:
     include:
-      - '/byom-page/**'
+      - '/overview/**'
     exclude:
       - '/**.json'
-    target: /user-index.json
+    target: /course-index.json
     properties:
       lastModified:
         select: none
         value: parseTimestamp(headers["last-modified"], "ddd, DD MMM YYYY hh:mm:ss GMT")
-      'userEmail':
-        select: head > meta[name="user-email"]
+      'courseId':
+        select: head > meta[name="course-id"]
         value: attribute(el, "content")
-      'userFullname':
-        select: head > meta[name="user-fullname"]
+      'courseTitle':
+        select: head > meta[name="course-title"]
         value: attribute(el, "content")
-      'userCity':
-        select: head > meta[name="user-city"]
+      'courseDuration':
+        select: head > meta[name="course-duration"]
         value: attribute(el, "content")
-      'userCountry':
-        select: head > meta[name="user-country"]
+      'courseSkillLevel':
+        select: head > meta[name="course-skill-level"]
         value: attribute(el, "content")
-      'userNationality':
-        select: head > meta[name="user-nationality"]
+      'courseSkills':
+        select: head > meta[name="course-skills"]
         value: attribute(el, "content")
-      'userGender':
-        select: head > meta[name="user-gender"]
+      'courseType':
+        select: head > meta[name="course-type"]
         value: attribute(el, "content")
-      'userAge':
-        select: head > meta[name="user-age"]
+      'courseRating':
+        select: head > meta[name="course-rating"]
         value: attribute(el, "content")
-      'userPicture':
-        select: head > meta[name="user-picture"]
+      'courseEnrollmentCount':
+        select: head > meta[name="course-enrollment-count"]
+        value: attribute(el, "content")
+      'description':
+        select: head > meta[name="description"]
         value: attribute(el, "content")
