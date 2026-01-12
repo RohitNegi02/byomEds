@@ -453,19 +453,30 @@ export default async function decorate(block) {
   // The course data is already rendered by the action, so we just need to add interactivity
   
   try {
-    // Force apply critical CSS styles directly via JavaScript
+    console.log('=== COURSE OVERVIEW DECORATE FUNCTION STARTED ===');
+    console.log('Block element:', block);
+    console.log('Block HTML:', block.innerHTML);
+    
+    // Force apply critical CSS styles directly via JavaScript with timestamp
     const style = document.createElement('style');
+    style.id = 'course-overview-styles-' + Date.now();
     style.textContent = `
+      /* Course Overview Forced Styles - ${new Date().toISOString()} */
       .course-overview .course-main-content {
         display: grid !important;
         grid-template-columns: 1fr 280px !important;
         gap: 40px !important;
         align-items: start !important;
+        background: yellow !important; /* Debug color */
       }
       .course-overview .course-hero {
         background: #4a4a4a !important;
         color: white !important;
         padding: 40px !important;
+      }
+      .course-overview .course-title {
+        color: white !important;
+        font-size: 2rem !important;
       }
       .course-overview .module-item {
         background: white !important;
@@ -508,6 +519,16 @@ export default async function decorate(block) {
       }
     `;
     document.head.appendChild(style);
+    console.log('CSS styles added to head:', style);
+    
+    // Also apply styles directly to elements
+    const mainContent = document.querySelector('.course-overview .course-main-content');
+    if (mainContent) {
+      mainContent.style.cssText = 'display: grid !important; grid-template-columns: 1fr 280px !important; gap: 40px !important; background: yellow !important;';
+      console.log('Direct styles applied to main content:', mainContent);
+    } else {
+      console.log('Main content element not found');
+    }
     
     // Extract course data from the existing HTML
     const courseData = extractCourseDataFromHTML();
