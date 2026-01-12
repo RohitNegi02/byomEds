@@ -521,13 +521,42 @@ export default async function decorate(block) {
     document.head.appendChild(style);
     console.log('CSS styles added to head:', style);
     
-    // Also apply styles directly to elements
-    const mainContent = document.querySelector('.course-overview .course-main-content');
+    // Debug: Check what elements exist
+    console.log('All elements with course-overview class:', document.querySelectorAll('.course-overview'));
+    console.log('All elements with course-main-content class:', document.querySelectorAll('.course-main-content'));
+    console.log('Block element classes:', block.className);
+    console.log('Block parent element:', block.parentElement);
+    
+    // Apply styles directly to the block element itself
+    block.style.cssText = `
+      display: block !important;
+      max-width: 1200px !important;
+      margin: 0 auto !important;
+      padding: 20px !important;
+      background: red !important;
+    `;
+    console.log('Styles applied directly to block element');
+    
+    // Find and style main content with multiple selectors
+    let mainContent = document.querySelector('.course-overview .course-main-content');
+    if (!mainContent) {
+      mainContent = document.querySelector('.course-main-content');
+    }
+    if (!mainContent) {
+      mainContent = block.querySelector('.course-main-content');
+    }
+    
     if (mainContent) {
       mainContent.style.cssText = 'display: grid !important; grid-template-columns: 1fr 280px !important; gap: 40px !important; background: yellow !important;';
       console.log('Direct styles applied to main content:', mainContent);
     } else {
-      console.log('Main content element not found');
+      console.log('Main content element not found with any selector');
+      // Try to find any element with "main" in the class name
+      const allElements = block.querySelectorAll('*');
+      console.log('All elements in block:', allElements);
+      allElements.forEach((el, index) => {
+        console.log(`Element ${index}:`, el.tagName, el.className);
+      });
     }
     
     // Extract course data from the existing HTML
