@@ -8,18 +8,7 @@
   min-height: 100vh;
 }
 
-/* Debug: Make sure CSS is loading */
-.course-overview::before {
-  content: "Course Overview CSS Loaded";
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: red;
-  color: white;
-  padding: 5px;
-  font-size: 12px;
-  z-index: 9999;
-}
+/* Remove debug indicator */
 
 .loading-state,
 .error-state {
@@ -59,16 +48,17 @@
   font-weight: 500;
 }
 
-/* Main Content Layout */
-.course-main-content {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 30px;
-  align-items: start;
+/* Main Content Layout - Force Grid Layout */
+.course-overview .course-main-content {
+  display: grid !important;
+  grid-template-columns: 1fr 300px !important;
+  gap: 30px !important;
+  align-items: start !important;
+  width: 100% !important;
 }
 
-.course-left-content {
-  min-width: 0;
+.course-overview .course-left-content {
+  min-width: 0 !important;
 }
 
 /* Course Sections */
