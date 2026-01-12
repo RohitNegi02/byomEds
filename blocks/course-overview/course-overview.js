@@ -450,114 +450,110 @@ function createSidebar(coreContentCompleted, totalCoreContent, courseData, inclu
 }
 
 export default async function decorate(block) {
-  // The course data is already rendered by the action, so we just need to add interactivity
-  
   try {
     console.log('=== COURSE OVERVIEW DECORATE FUNCTION STARTED ===');
-    console.log('Block element:', block);
-    console.log('Block HTML:', block.innerHTML);
     
-    // Force apply critical CSS styles directly via JavaScript with timestamp
-    const style = document.createElement('style');
-    style.id = 'course-overview-styles-' + Date.now();
-    style.textContent = `
-      /* Course Overview Forced Styles - ${new Date().toISOString()} */
-      .course-overview .course-main-content {
-        display: grid !important;
-        grid-template-columns: 1fr 280px !important;
-        gap: 40px !important;
-        align-items: start !important;
-        background: yellow !important; /* Debug color */
+    // Restructure the existing HTML into proper layout
+    const existingHTML = block.innerHTML;
+    console.log('Original HTML:', existingHTML);
+    
+    // Extract data from existing elements
+    const h1 = block.querySelector('h1');
+    const courseTitle = h1 ? h1.textContent : 'Course Title';
+    
+    const paragraphs = block.querySelectorAll('p');
+    let courseFormat = 'Self Paced';
+    let moduleButtons = [];
+    let continueText = '';
+    let progressText = '';
+    
+    paragraphs.forEach(p => {
+      const text = p.textContent.trim();
+      if (text === 'Self Paced') {
+        courseFormat = text;
+      } else if (text === 'Continue') {
+        continueText = text;
+      } else if (text.includes('Core content completed')) {
+        progressText = text;
+      } else if (p.classList.contains('button-container')) {
+        const button = p.querySelector('a.button');
+        if (button) {
+          moduleButtons.push({
+            text: button.textContent,
+            title: button.title || button.textContent
+          });
+        }
       }
-      .course-overview .course-hero {
-        background: #4a4a4a !important;
-        color: white !important;
-        padding: 40px !important;
-      }
-      .course-overview .course-title {
-        color: white !important;
-        font-size: 2rem !important;
-      }
-      .course-overview .module-item {
-        background: white !important;
-        border: 1px solid #e0e0e0 !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        margin-bottom: 16px !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
-      }
-      .course-overview .course-sidebar {
-        background: #f8f9fa !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        border: 1px solid #e0e0e0 !important;
-      }
-      .course-overview .continue-btn {
-        width: 100% !important;
-        background: #4285f4 !important;
-        color: white !important;
-        border: none !important;
-        padding: 12px 20px !important;
-        border-radius: 6px !important;
-        margin-bottom: 20px !important;
-      }
-      .course-overview .section-tabs {
-        display: flex !important;
-        border-bottom: 1px solid #e0e0e0 !important;
-        margin-bottom: 30px !important;
-      }
-      .course-overview .tab-button {
-        background: none !important;
-        border: none !important;
-        padding: 12px 20px !important;
-        margin-right: 20px !important;
-        border-bottom: 3px solid transparent !important;
-      }
-      .course-overview .tab-button.active {
-        color: #4285f4 !important;
-        border-bottom-color: #4285f4 !important;
-      }
+    });
+    
+    // Create new structured HTML
+    const newHTML = `
+      <!-- Course Header -->
+      <div class="course-header">
+        <div class="course-hero">
+          <h1 class="course-title">${courseTitle}</h1>
+          <div class="course-format">${courseFormat}</div>
+        </div>
+      </div>
+      
+      <!-- Main Content -->
+      <div class="course-main-content">
+        <!-- Left Content -->
+        <div class="course-left-content">
+          <div class="course-section modules-section">
+            <div class="section-tabs">
+              <button class="tab-button active">Modules</button>
+              <button class="tab-button">Notes</button>
+            </div>
+            <div class="modules-content">
+              <div class="core-content-section">
+                <h3 class="content-title">
+                  Core content 
+                  <span class="duration-badge">⏱️ 1h (estimated)</span>
+                </h3>
+                <div class="modules-list">
+                  ${moduleButtons.map((module, index) => `
+                    <div class="module-item ${index < 2 ? 'completed' : 'in-progress'}" data-resource-id="module-${index}" data-course-id="course:12495374">
+                      <div class="module-icon">⭐</div>
+                      <div class="module-content">
+                        <div class="module-header">
+                          <span class="module-type">Self-paced: SCORM2004</span>
+                        </div>
+                        <div class="module-title">
+                          <a href="#" class="module-link">${module.text}</a>
+                        </div>
+                        <div class="module-meta">
+                          <span class="module-duration">⏱️ N/A</span>
+                          <span class="module-status">${index < 2 ? '✓ Last visited' : '⏱️ In Progress'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="course-sidebar">
+          <div class="sidebar-actions">
+            <button class="continue-btn">Continue</button>
+          </div>
+          
+          <div class="sidebar-section progress-section">
+            <div class="progress-item">
+              <span class="progress-count">2/3</span>
+              <span class="progress-label">Core content completed</span>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
-    document.head.appendChild(style);
-    console.log('CSS styles added to head:', style);
     
-    // Debug: Check what elements exist
-    console.log('All elements with course-overview class:', document.querySelectorAll('.course-overview'));
-    console.log('All elements with course-main-content class:', document.querySelectorAll('.course-main-content'));
-    console.log('Block element classes:', block.className);
-    console.log('Block parent element:', block.parentElement);
-    
-    // Apply styles directly to the block element itself
-    block.style.cssText = `
-      display: block !important;
-      max-width: 1200px !important;
-      margin: 0 auto !important;
-      padding: 20px !important;
-      background: red !important;
-    `;
-    console.log('Styles applied directly to block element');
-    
-    // Find and style main content with multiple selectors
-    let mainContent = document.querySelector('.course-overview .course-main-content');
-    if (!mainContent) {
-      mainContent = document.querySelector('.course-main-content');
-    }
-    if (!mainContent) {
-      mainContent = block.querySelector('.course-main-content');
-    }
-    
-    if (mainContent) {
-      mainContent.style.cssText = 'display: grid !important; grid-template-columns: 1fr 280px !important; gap: 40px !important; background: yellow !important;';
-      console.log('Direct styles applied to main content:', mainContent);
-    } else {
-      console.log('Main content element not found with any selector');
-      // Try to find any element with "main" in the class name
-      const allElements = block.querySelectorAll('*');
-      console.log('All elements in block:', allElements);
-      allElements.forEach((el, index) => {
-        console.log(`Element ${index}:`, el.tagName, el.className);
-      });
-    }
+    // Replace the block content
+    block.innerHTML = newHTML;
+    console.log('HTML restructured successfully');
     
     // Extract course data from the existing HTML
     const courseData = extractCourseDataFromHTML();
