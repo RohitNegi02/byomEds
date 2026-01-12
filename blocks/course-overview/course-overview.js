@@ -453,6 +453,62 @@ export default async function decorate(block) {
   // The course data is already rendered by the action, so we just need to add interactivity
   
   try {
+    // Force apply critical CSS styles directly via JavaScript
+    const style = document.createElement('style');
+    style.textContent = `
+      .course-overview .course-main-content {
+        display: grid !important;
+        grid-template-columns: 1fr 280px !important;
+        gap: 40px !important;
+        align-items: start !important;
+      }
+      .course-overview .course-hero {
+        background: #4a4a4a !important;
+        color: white !important;
+        padding: 40px !important;
+      }
+      .course-overview .module-item {
+        background: white !important;
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+      }
+      .course-overview .course-sidebar {
+        background: #f8f9fa !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        border: 1px solid #e0e0e0 !important;
+      }
+      .course-overview .continue-btn {
+        width: 100% !important;
+        background: #4285f4 !important;
+        color: white !important;
+        border: none !important;
+        padding: 12px 20px !important;
+        border-radius: 6px !important;
+        margin-bottom: 20px !important;
+      }
+      .course-overview .section-tabs {
+        display: flex !important;
+        border-bottom: 1px solid #e0e0e0 !important;
+        margin-bottom: 30px !important;
+      }
+      .course-overview .tab-button {
+        background: none !important;
+        border: none !important;
+        padding: 12px 20px !important;
+        margin-right: 20px !important;
+        border-bottom: 3px solid transparent !important;
+      }
+      .course-overview .tab-button.active {
+        color: #4285f4 !important;
+        border-bottom-color: #4285f4 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
     // Extract course data from the existing HTML
     const courseData = extractCourseDataFromHTML();
     
