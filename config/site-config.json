@@ -3,16 +3,9 @@
     "code": {
       "owner": "rohitnegi02",
       "repo": "byomEds",
-      "source": {
-        "type": "github",
-        "url": "https://github.com/RohitNegi02/byomEds"
-      }
+      "source": { "type": "github", "url": "https://github.com/RohitNegi02/byomEds" }
     },
     "content": {
-      "source": {
-        "url": "https://content.da.live/rohitnegi02/byomeds/",
-        "type": "markup"
-      },
       "contentBusId": "4a0dfe61b9be5a7246e8eabe9d3c20ff3053fa0637cd4c2c892b27a45da"
     },
     "overlays": [
