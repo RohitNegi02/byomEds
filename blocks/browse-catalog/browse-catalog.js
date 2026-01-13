@@ -2,18 +2,10 @@
 const API_CONFIG = {
   baseUrl: 'https://learningmanager.adobe.com/primeapi/v2',
   headers: {
-    'Accept': 'application/vnd.api+json'
+    'Accept': 'application/vnd.api+json',
+    'Authorization': `oauth ${sessionStorage.getItem('alm_access_token')}`
   }
 };
-
-// Get headers with current auth token
-function getAuthHeaders() {
-  const token = window.ALMAuth?.getAccessToken();
-  return {
-    'Accept': 'application/vnd.api+json',
-    'Authorization': token ? `oauth ${token}` : ''
-  };
-}
 
 // Search API function
 async function searchLearningObjects(searchTerm, limit = 9, cursor = null) {
@@ -38,7 +30,7 @@ async function searchLearningObjects(searchTerm, limit = 9, cursor = null) {
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: getAuthHeaders()
+      headers: API_CONFIG.headers
     });
 
     if (!response.ok) {
@@ -82,7 +74,7 @@ async function fetchLearningObjects(limit = 9, searchTerm = '', filters = {}, cu
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: getAuthHeaders()
+      headers: API_CONFIG.headers
     });
 
     if (!response.ok) {
@@ -105,7 +97,7 @@ async function fetchSkillDetails(skillId) {
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: getAuthHeaders()
+      headers: API_CONFIG.headers
     });
 
     if (!response.ok) {
@@ -388,12 +380,6 @@ export default async function decorate(block) {
   block.innerHTML = '';
   
   // Show loading state
-  block.innerHTML = '<div style="text-align: center; padding: 40px;">Authenticating...</div>';
-  
-  // Wait for authentication to complete
-  await waitForAuthentication();
-  
-  // Update loading message
   block.innerHTML = '<div style="text-align: center; padding: 40px;">Loading courses...</div>';
   
   // Create header
@@ -542,23 +528,8 @@ export default async function decorate(block) {
       }
     });
     
-  return activeTypes.length > 0 ? activeTypes : ['course', 'learningProgram', 'certification', 'jobAid'];
-}
-
-// Wait for authentication to complete
-async function waitForAuthentication() {
-  return new Promise((resolve) => {
-    const checkAuth = () => {
-      const token = sessionStorage.getItem('alm_access_token');
-      if (token) {
-        resolve();
-      } else {
-        setTimeout(checkAuth, 500);
-      }
-    };
-    checkAuth();
-  });
-}
+    return activeTypes.length > 0 ? activeTypes : ['course', 'learningProgram', 'certification', 'jobAid'];
+  }
   
   // Initial load
   await loadCourses(true);
