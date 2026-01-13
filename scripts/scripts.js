@@ -141,6 +141,16 @@ export function decorateMain(main) {
 async function loadEager(doc) {
   doc.documentElement.lang = 'en';
   decorateTemplateAndTheme();
+
+  // Load envConfig first, then initialize OAuth
+  try {
+    await import('./envConfig.js');
+    const { initOAuth } = await import('./oauth.js');
+    initOAuth();
+  } catch (error) {
+    console.error('Failed to load OAuth:', error);
+  }
+  
   if (getMetadata('breadcrumbs').toLowerCase() === 'true') {
     doc.body.dataset.breadcrumbs = true;
   }
@@ -219,16 +229,7 @@ if (window.location.hostname.includes('ue.da.live')) {
 
 loadPage();
 
-// Load environment configuration and OAuth
-import('./envConfig.js');
-import('./oauth.js').then(({ initOAuth }) => {
-  // Initialize OAuth after page loads
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initOAuth);
-  } else {
-    initOAuth();
-  }
-});
+
 
 const { searchParams, origin } = new URL(window.location.href);
 const branch = searchParams.get('nx') || 'main';
