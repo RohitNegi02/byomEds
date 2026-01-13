@@ -261,18 +261,19 @@ async function createCourseCard(item, includedData = []) {
   card.addEventListener('click', () => {
     console.log('Course clicked:', item.id);
     
-    // Navigate to course overview page
-    const courseId = item.id;
-    // For now, use the first instance ID if available, otherwise use the course ID
+    // Extract numeric IDs from the course ID format (e.g., "course:12495374")
+    const courseId = item.id.replace('course:', '');
     let instanceId = courseId;
     
     // Try to get the first instance ID from the course data
     if (item.relationships && item.relationships.instances && item.relationships.instances.data && item.relationships.instances.data.length > 0) {
-      instanceId = item.relationships.instances.data[0].id;
+      const fullInstanceId = item.relationships.instances.data[0].id;
+      // Extract numeric part and format as courseId-instanceId (e.g., "7235190-7875851")
+      instanceId = fullInstanceId.replace('course:', '').replace('_', '-');
     }
     
-    // Construct the overview URL with proper parameters
-    const overviewUrl = `/overview?trainingId=${courseId}&trainingInstanceId=${instanceId}`;
+    // Construct the overview URL with proper path format
+    const overviewUrl = `/overview/trainingId/${courseId}/trainingInstanceId/${instanceId}`;
     
     // Navigate to the overview page
     window.location.href = overviewUrl;
