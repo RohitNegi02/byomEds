@@ -388,6 +388,12 @@ export default async function decorate(block) {
   block.innerHTML = '';
   
   // Show loading state
+  block.innerHTML = '<div style="text-align: center; padding: 40px;">Authenticating...</div>';
+  
+  // Wait for authentication to complete
+  await waitForAuthentication();
+  
+  // Update loading message
   block.innerHTML = '<div style="text-align: center; padding: 40px;">Loading courses...</div>';
   
   // Create header
@@ -536,8 +542,23 @@ export default async function decorate(block) {
       }
     });
     
-    return activeTypes.length > 0 ? activeTypes : ['course', 'learningProgram', 'certification', 'jobAid'];
-  }
+  return activeTypes.length > 0 ? activeTypes : ['course', 'learningProgram', 'certification', 'jobAid'];
+}
+
+// Wait for authentication to complete
+async function waitForAuthentication() {
+  return new Promise((resolve) => {
+    const checkAuth = () => {
+      const token = sessionStorage.getItem('alm_access_token');
+      if (token) {
+        resolve();
+      } else {
+        setTimeout(checkAuth, 500);
+      }
+    };
+    checkAuth();
+  });
+}
   
   // Initial load
   await loadCourses(true);
