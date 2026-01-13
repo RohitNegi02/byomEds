@@ -219,6 +219,17 @@ if (window.location.hostname.includes('ue.da.live')) {
 
 loadPage();
 
+// Load environment configuration and OAuth
+import('./envConfig.js');
+import('./oauth.js').then(({ initOAuth }) => {
+  // Initialize OAuth after page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOAuth);
+  } else {
+    initOAuth();
+  }
+});
+
 const { searchParams, origin } = new URL(window.location.href);
 const branch = searchParams.get('nx') || 'main';
 
