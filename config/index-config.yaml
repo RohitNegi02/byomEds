@@ -1,8 +1,6 @@
 version: 1
 indices:
   pages:
-    include:
-      - '/overview/**'
     exclude:
       - '/**.json'
     target: /course-index.json
