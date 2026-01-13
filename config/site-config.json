@@ -1,23 +1,26 @@
 {
     "version": 3,
     "code": {
-        "owner": "rohitnegi02",
-        "repo": "byomeds",
-        "source": {
-            "type": "github",
-            "url": "https://github.com/RohitNegi02/byomEds"
-        }
+      "owner": "rohitnegi02",
+      "repo": "byomEds",
+      "source": {
+        "type": "github",
+        "url": "https://github.com/RohitNegi02/byomEds"
+      }
     },
     "content": {
-        "source": {
-            "url": "https://content.da.live/rohitnegi02/byomeds/",
-            "type": "markup"
-        },
-        "overlay": {
-            "prefix": "/byomtest",
-            "url": "https://1070326-refimplalm-stage.adobeio-static.net/api/v1/web/EdsAlm/course-viewer",
-            "type": "markup"
-        },
-        "contentBusId": "4a0dfe61b9be5a7246e8eabe9d3c20ff3053fa0637cd4c2c892b27a45da"
-    }
-}
+      "source": {
+        "url": "https://content.da.live/rohitnegi02/byomeds/",
+        "type": "markup"
+      },
+      "contentBusId": "4a0dfe61b9be5a7246e8eabe9d3c20ff3053fa0637cd4c2c892b27a45da"
+    },
+    "overlays": [
+      {
+        "prefix": "/byomtest",
+        "url": "https://1070326-refimplalm-stage.adobeio-static.net/api/v1/web/EdsAlm/course-viewer",
+        "type": "markup"
+      }
+    ]
+  }
+  
