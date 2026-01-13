@@ -17,7 +17,7 @@
     },
     "overlays": [
       {
-        "prefix": "/byomtest2",
+        "prefix": "/*",
         "url": "https://1070326-refimplalm-stage.adobeio-static.net/api/v1/web/EdsAlm/course-viewer",
         "type": "markup"
       }
