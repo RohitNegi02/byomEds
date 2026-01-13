@@ -1,7 +1,11 @@
 version: 1
 indices:
   pages:
+    include:
+      - '/overview/**'
+      - '/trainingId/**'
     exclude:
+      - '/byom-page/**'   # Exclude overlay paths
       - '/**.json'
     target: /course-index.json
     properties:
