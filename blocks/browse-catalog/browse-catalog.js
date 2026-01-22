@@ -49,10 +49,10 @@ async function searchLearningObjects(searchTerm, limit = 9, cursor = null) {
 async function fetchLearningObjects(limit = 9, searchTerm = '', filters = {}, cursor = null) {
   try {
     const params = new URLSearchParams({
-      'include': 'instances.enrollment.loResourceGrades,enrollment.loInstance.loResources.resources,subLOs.prerequisiteLOs,subLOs.subLOs.prerequisiteLOs,authors,subLOs.enrollment.loResourceGrades, subLOs.subLOs.enrollment.loResourceGrades, subLOs.subLOs.instances.loResources.resources, subLOs.instances.loResources.resources,instances.loResources.resources,supplementaryLOs.instances.loResources.resources,supplementaryResources,subLOs.supplementaryResources,subLOs.enrollment,instances.loResources.resources.room,subLOs.enrollment.loInstance.loResources.resources,prerequisiteLOs.enrollment,skills',
+      'include': 'instances.loResources.resources,instances.badge,supplementaryResources,enrollment.loResourceGrades,skills.skillLevel.skill,instances.loResources.resources.room',
       'page[limit]': limit,
-      'sort': 'name',
-      'filter.ignoreEnhancedLP': 'true'
+      'sort': '-date',
+      'filter.ignoreEnhancedLP': 'false'
     });
 
     // Add cursor for pagination if provided
@@ -68,6 +68,18 @@ async function fetchLearningObjects(limit = 9, searchTerm = '', filters = {}, cu
     // Add type filters if provided
     if (filters.loTypes && filters.loTypes.length > 0) {
       params.append('filter.loTypes', filters.loTypes.join(','));
+    }
+
+    // Add skill filters if provided
+    if (filters.skillNames && filters.skillNames.length > 0) {
+      // Use the first skill for now, API might not support multiple skills
+      params.append('filter.skillName', filters.skillNames[0]);
+    }
+
+    // Add tag filters if provided
+    if (filters.tagNames && filters.tagNames.length > 0) {
+      // Use the first tag for now, API might not support multiple tags
+      params.append('filter.tagName', filters.tagNames[0]);
     }
 
     const url = `${API_CONFIG.baseUrl}/learningObjects?${params.toString()}`;
@@ -109,6 +121,72 @@ async function fetchSkillDetails(skillId) {
   } catch (error) {
     console.error('Error fetching skill details:', error);
     return null;
+  }
+}
+
+// Fetch available tags from API
+async function fetchTags() {
+  try {
+    const url = `${API_CONFIG.baseUrl}/data?filter.tagName=true`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: API_CONFIG.headers
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data.attributes.names || [];
+  } catch (error) {
+    console.error('Error fetching tags:', error);
+    return [];
+  }
+}
+
+// Fetch available skills from API
+async function fetchSkills() {
+  try {
+    const url = `${API_CONFIG.baseUrl}/data?filter.skillName=true`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: API_CONFIG.headers
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data.attributes.names || [];
+  } catch (error) {
+    console.error('Error fetching skills:', error);
+    return [];
+  }
+}
+
+// Fetch available catalogs from API
+async function fetchCatalogs() {
+  try {
+    const url = `${API_CONFIG.baseUrl}/catalogs`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: API_CONFIG.headers
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching catalogs:', error);
+    return [];
   }
 }
 
@@ -282,34 +360,47 @@ async function createCourseCard(item, includedData = []) {
   return card;
 }
 
-function createSidebar() {
+async function createSidebar() {
   const sidebar = document.createElement('div');
   sidebar.className = 'catalog-sidebar';
+  
+  // Fetch catalogs, tags and skills data
+  const [catalogs, tags, skills] = await Promise.all([fetchCatalogs(), fetchTags(), fetchSkills()]);
+  
+  // Create catalog filter items
+  const catalogFilterItems = catalogs.map((catalog, index) => {
+    const catalogName = catalog.attributes?.localizedMetadata?.[0]?.name || catalog.attributes?.name || `Catalog ${catalog.id}`;
+    const catalogId = `catalog-${catalog.id}`;
+    
+    return `
+      <div class="filter-item">
+        <input type="checkbox" id="${catalogId}" data-catalog="${catalog.id}">
+        <label for="${catalogId}">${catalogName}</label>
+      </div>
+    `;
+  }).join('');
+  
+  // Create tags filter items
+  const tagsFilterItems = tags.map(tag => `
+    <div class="filter-item">
+      <input type="checkbox" id="tag-${tag.toLowerCase().replace(/\s+/g, '-')}" data-tag="${tag}">
+      <label for="tag-${tag.toLowerCase().replace(/\s+/g, '-')}">${tag}</label>
+    </div>
+  `).join('');
+  
+  // Create skills filter items
+  const skillsFilterItems = skills.map(skill => `
+    <div class="filter-item">
+      <input type="checkbox" id="skill-${skill.toLowerCase().replace(/\s+/g, '-')}" data-skill="${skill}">
+      <label for="skill-${skill.toLowerCase().replace(/\s+/g, '-')}">${skill}</label>
+    </div>
+  `).join('');
   
   sidebar.innerHTML = `
     <div class="sidebar-section">
       <h3>Catalogs</h3>
-      <div class="filter-group">
-        <div class="filter-item">
-          <input type="checkbox" id="lsk-consulting" checked>
-          <label for="lsk-consulting">LSK Consulting</label>
-        </div>
-        <div class="filter-item">
-          <input type="checkbox" id="learning-support">
-          <label for="learning-support">Learning Support</label>
-        </div>
-        <div class="filter-item">
-          <input type="checkbox" id="alm-enablement">
-          <label for="alm-enablement">ALM Enablement</label>
-        </div>
-        <div class="filter-item">
-          <input type="checkbox" id="cio-tpt">
-          <label for="cio-tpt">CIO TPT</label>
-        </div>
-        <div class="filter-item">
-          <input type="checkbox" id="ciso-cyber">
-          <label for="ciso-cyber">CISO Cyber Defense</label>
-        </div>
+      <div class="filter-group" id="catalogs-filter-group">
+        ${catalogFilterItems || '<div class="filter-item">No catalogs available</div>'}
       </div>
     </div>
     
@@ -317,7 +408,7 @@ function createSidebar() {
       <h3>Type</h3>
       <div class="filter-group">
         <div class="filter-item">
-          <input type="checkbox" id="courses" checked>
+          <input type="checkbox" id="courses">
           <label for="courses">Courses</label>
         </div>
         <div class="filter-item">
@@ -331,6 +422,64 @@ function createSidebar() {
         <div class="filter-item">
           <input type="checkbox" id="certifications">
           <label for="certifications">Certifications</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="sidebar-section">
+      <h3>Tags</h3>
+      <div class="filter-group" id="tags-filter-group">
+        ${tagsFilterItems || '<div class="filter-item">No tags available</div>'}
+      </div>
+    </div>
+    
+    <div class="sidebar-section">
+      <h3>Skills</h3>
+      <div class="filter-group" id="skills-filter-group">
+        ${skillsFilterItems || '<div class="filter-item">No skills available</div>'}
+      </div>
+    </div>
+    
+    <div class="sidebar-section">
+      <h3>Format</h3>
+      <div class="filter-group" id="format-filter-group">
+        <div class="filter-item">
+          <input type="checkbox" id="format-activity" data-format="Activity">
+          <label for="format-activity">Activity</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="format-blended" data-format="Blended">
+          <label for="format-blended">Blended</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="format-self-paced" data-format="Self Paced">
+          <label for="format-self-paced">Self Paced</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="format-virtual-classroom" data-format="Virtual Classroom">
+          <label for="format-virtual-classroom">Virtual Classroom</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="format-classroom" data-format="Classroom">
+          <label for="format-classroom">Classroom</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="sidebar-section">
+      <h3>Duration</h3>
+      <div class="filter-group" id="duration-filter-group">
+        <div class="filter-item">
+          <input type="checkbox" id="duration-30-mins" data-duration="30-mins">
+          <label for="duration-30-mins">30 mins or less</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="duration-30-mins-2-hours" data-duration="30-mins-2-hours">
+          <label for="duration-30-mins-2-hours">30 mins to 2 hours</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" id="duration-2-hours-plus" data-duration="2-hours-plus">
+          <label for="duration-2-hours-plus">2 hours+</label>
         </div>
       </div>
     </div>
@@ -390,8 +539,8 @@ export default async function decorate(block) {
   const contentContainer = document.createElement('div');
   contentContainer.className = 'catalog-content';
   
-  // Create sidebar
-  const sidebar = createSidebar();
+  // Create sidebar (now async)
+  const sidebar = await createSidebar();
   contentContainer.appendChild(sidebar);
   
   // Create main content area
@@ -421,13 +570,16 @@ export default async function decorate(block) {
       courseGrid.innerHTML = '';
     }
     
-    if (courses.length === 0 && !append) {
+    // Apply client-side filtering
+    const filteredCourses = filterCoursesByClientSide(courses);
+    
+    if (filteredCourses.length === 0 && !append) {
       courseGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No courses found matching your criteria.</div>';
       return;
     }
     
     // Create cards with skill names loaded asynchronously
-    const cardPromises = courses.map(course => createCourseCard(course, includedData));
+    const cardPromises = filteredCourses.map(course => createCourseCard(course, includedData));
     const cards = await Promise.all(cardPromises);
     
     cards.forEach(card => {
@@ -460,7 +612,9 @@ export default async function decorate(block) {
       
       const cursor = resetData ? null : nextCursor;
       const data = await fetchLearningObjects(9, currentFilters.searchTerm, {
-        loTypes: getActiveTypeFilters()
+        loTypes: getActiveTypeFilters(),
+        skillNames: getActiveSkillFilters(),
+        tagNames: getActiveTagFilters()
       }, cursor);
       
       const newCourses = data.data || [];
@@ -532,6 +686,165 @@ export default async function decorate(block) {
     return activeTypes.length > 0 ? activeTypes : ['course', 'learningProgram', 'certification', 'jobAid'];
   }
   
+  function getActiveFormatFilters() {
+    const formatCheckboxes = sidebar.querySelectorAll('#format-filter-group input[type="checkbox"]:checked');
+    const activeFormats = [];
+    
+    formatCheckboxes.forEach(checkbox => {
+      activeFormats.push(checkbox.dataset.format);
+    });
+    
+    return activeFormats;
+  }
+  
+  function getActiveDurationFilters() {
+    const durationCheckboxes = sidebar.querySelectorAll('#duration-filter-group input[type="checkbox"]:checked');
+    const activeDurations = [];
+    
+    durationCheckboxes.forEach(checkbox => {
+      activeDurations.push(checkbox.dataset.duration);
+    });
+    
+    return activeDurations;
+  }
+  
+  function getActiveTagFilters() {
+    const tagCheckboxes = sidebar.querySelectorAll('#tags-filter-group input[type="checkbox"]:checked');
+    const activeTags = [];
+    
+    tagCheckboxes.forEach(checkbox => {
+      activeTags.push(checkbox.dataset.tag);
+    });
+    
+    return activeTags;
+  }
+  
+  function getActiveSkillFilters() {
+    const skillCheckboxes = sidebar.querySelectorAll('#skills-filter-group input[type="checkbox"]:checked');
+    const activeSkills = [];
+    
+    skillCheckboxes.forEach(checkbox => {
+      activeSkills.push(checkbox.dataset.skill);
+    });
+    
+    return activeSkills;
+  }
+  
+  function getActiveCatalogFilters() {
+    const catalogCheckboxes = sidebar.querySelectorAll('#catalogs-filter-group input[type="checkbox"]:checked');
+    const activeCatalogs = [];
+    
+    catalogCheckboxes.forEach(checkbox => {
+      activeCatalogs.push(checkbox.dataset.catalog);
+    });
+    
+    return activeCatalogs;
+  }
+  
+  function filterCoursesByClientSide(courses) {
+    const activeFormats = getActiveFormatFilters();
+    const activeDurations = getActiveDurationFilters();
+    const activeTags = getActiveTagFilters();
+    const activeSkills = getActiveSkillFilters();
+    
+    return courses.filter(course => {
+      const attributes = course.attributes;
+      
+      // Format filter
+      if (activeFormats.length > 0) {
+        const courseFormat = attributes.loFormat || 'Self Paced';
+        if (!activeFormats.includes(courseFormat)) {
+          return false;
+        }
+      }
+      
+      // Duration filter
+      if (activeDurations.length > 0) {
+        const courseDuration = attributes.duration || 0;
+        const durationInMinutes = courseDuration / 60;
+        
+        let matchesDuration = false;
+        activeDurations.forEach(duration => {
+          switch (duration) {
+            case '30-mins':
+              if (durationInMinutes <= 30) matchesDuration = true;
+              break;
+            case '30-mins-2-hours':
+              if (durationInMinutes > 30 && durationInMinutes <= 120) matchesDuration = true;
+              break;
+            case '2-hours-plus':
+              if (durationInMinutes > 120) matchesDuration = true;
+              break;
+          }
+        });
+        
+        if (!matchesDuration) {
+          return false;
+        }
+      }
+      
+      // Tags filter
+      if (activeTags.length > 0) {
+        const courseTags = attributes.tags || [];
+        const hasMatchingTag = activeTags.some(tag => 
+          courseTags.some(courseTag => courseTag.toLowerCase().includes(tag.toLowerCase()))
+        );
+        if (!hasMatchingTag) {
+          return false;
+        }
+      }
+      
+      // Skills filter - check course skills against selected skills
+      if (activeSkills.length > 0) {
+        let hasMatchingSkill = false;
+        
+        // Check if course has skills in relationships
+        if (course.relationships && course.relationships.skills && course.relationships.skills.data) {
+          // Get skill names for this course (we'll need to check against cached skills)
+          const courseSkillIds = course.relationships.skills.data.map(skillRef => {
+            const skillIdMatch = skillRef.id.match(/_(\d+)$/);
+            return skillIdMatch ? skillIdMatch[1] : null;
+          }).filter(id => id !== null);
+          
+          // Check if any of the course's skills match the selected skills
+          for (const skillId of courseSkillIds) {
+            if (skillCache.has(skillId)) {
+              const skillName = skillCache.get(skillId);
+              if (activeSkills.some(selectedSkill => 
+                skillName.toLowerCase().includes(selectedSkill.toLowerCase()) ||
+                selectedSkill.toLowerCase().includes(skillName.toLowerCase())
+              )) {
+                hasMatchingSkill = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        // Also check if any selected skill matches the course tags or metadata
+        if (!hasMatchingSkill) {
+          const courseTags = attributes.tags || [];
+          const metadata = attributes.localizedMetadata && attributes.localizedMetadata[0];
+          const courseName = metadata ? metadata.name.toLowerCase() : '';
+          const courseDescription = metadata ? (metadata.description || '').toLowerCase() : '';
+          
+          hasMatchingSkill = activeSkills.some(selectedSkill => {
+            const skillLower = selectedSkill.toLowerCase();
+            return courseTags.some(tag => tag.toLowerCase().includes(skillLower)) ||
+                   courseName.includes(skillLower) ||
+                   courseDescription.includes(skillLower);
+          });
+        }
+        
+        if (!hasMatchingSkill) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }
+  
   // Initial load
   await loadCourses(true);
   
@@ -592,9 +905,13 @@ export default async function decorate(block) {
     checkbox.addEventListener('change', async () => {
       console.log('Filter changed:', checkbox.id, checkbox.checked);
       
-      // If it's a type filter, reload courses
-      if (['courses', 'learning-paths', 'job-aids', 'certifications'].includes(checkbox.id)) {
+      // Server-side filters that require API reload
+      if (['courses', 'learning-paths', 'job-aids', 'certifications'].includes(checkbox.id) ||
+          checkbox.dataset.skill || checkbox.dataset.tag || checkbox.dataset.catalog) {
         await loadCourses(true); // Reset data for new filter
+      } else {
+        // Client-side filters (format, duration) - just re-render
+        await renderCourses(allCourses, false);
       }
     });
   });

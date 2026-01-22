@@ -1,0 +1,192 @@
+// API Service for Course Overview
+// Handles all API calls and data fetching
+
+// Cache access token to avoid repeated sessionStorage calls
+let cachedAccessToken = null;
+
+// Get access token (cached)
+function getAccessToken() {
+  if (!cachedAccessToken) {
+    cachedAccessToken = sessionStorage.getItem('alm_access_token');
+  }
+  return cachedAccessToken;
+}
+
+// API Configuration
+const API_CONFIG = {
+  baseUrl: 'https://learningmanager.adobe.com/primeapi/v2',
+  getHeaders: () => ({
+    'Accept': 'application/vnd.api+json',
+    'Authorization': `oauth ${getAccessToken()}`
+  })
+};
+
+// Fetch learner-specific course data
+async function fetchLearnerCourseData(courseId) {
+  try {
+    const params = new URLSearchParams({
+      'include': 'instances.enrollment.loResourceGrades,enrollment.loInstance.loResources.resources,prerequisiteLOs,subLOs.prerequisiteLOs,subLOs.subLOs.prerequisiteLOs,authors,subLOs.enrollment.loResourceGrades, subLOs.subLOs.enrollment.loResourceGrades, subLOs.subLOs.instances.loResources.resources, subLOs.instances.loResources.resources,instances.loResources.resources,supplementaryLOs.instances.loResources.resources,supplementaryResources,subLOs.supplementaryResources,subLOs.enrollment,instances.badge,skills.skillLevel.badge,skills.skillLevel.skill,instances.loResources.resources.room,subLOs.enrollment.loInstance.loResources.resources,prerequisiteLOs.enrollment',
+      'useCache': 'true',
+      'filter.ignoreEnhancedLP': 'false'
+    });
+
+    const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}?${params.toString()}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: API_CONFIG.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching learner course data:', error);
+    return null;
+  }
+}
+
+// Enroll user in course
+async function enrollUser(courseId) {
+  try {
+    const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: API_CONFIG.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error enrolling user:', error);
+    return null;
+  }
+}
+
+// Unenroll user from course
+async function unenrollUser(courseId) {
+  try {
+    const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}`;
+    
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: API_CONFIG.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error unenrolling user:', error);
+    return false;
+  }
+}
+
+// Bookmark/Save course
+async function bookmarkCourse(courseId) {
+  try {
+    const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}/bookmark`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: API_CONFIG.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error bookmarking course:', error);
+    return false;
+  }
+}
+
+// Rate course
+async function rateCourse(enrollmentId, rating) {
+  try {
+    // URL encode the enrollment ID to handle special characters like colons
+    const encodedEnrollmentId = encodeURIComponent(enrollmentId);
+    const url = `${API_CONFIG.baseUrl}/enrollments/${encodedEnrollmentId}/rate`;
+    
+    console.log('Rating API URL:', url);
+    console.log('Rating payload:', { rating, enrollmentId });
+    
+    // Simple payload format as expected by the API
+    const payload = {
+      rating: parseInt(rating)
+    };
+    
+    console.log('Rating request payload:', JSON.stringify(payload, null, 2));
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        ...API_CONFIG.getHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('Rating response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Rating API error response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error rating course:', error);
+    return false;
+  }
+}
+
+// Fetch course notes
+async function fetchCourseNotes(courseId, instanceId) {
+  try {
+    const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}/instances/${instanceId}/note`;
+    
+    console.log('Fetching notes from URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: API_CONFIG.getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Notes data fetched:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching course notes:', error);
+    return null;
+  }
+}
+
+// Export functions
+export {
+  getAccessToken,
+  API_CONFIG,
+  fetchLearnerCourseData,
+  enrollUser,
+  unenrollUser,
+  bookmarkCourse,
+  rateCourse,
+  fetchCourseNotes
+};

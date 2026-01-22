@@ -94,6 +94,44 @@
   cursor: pointer;
 }
 
+/* Scrollable filter groups for Tags and Skills */
+.browse-catalog #tags-filter-group,
+.browse-catalog #skills-filter-group {
+  max-height: 200px; /* Approximately 7 items at ~28px each */
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Custom scrollbar styling */
+.browse-catalog #tags-filter-group::-webkit-scrollbar,
+.browse-catalog #skills-filter-group::-webkit-scrollbar {
+  width: 6px;
+}
+
+.browse-catalog #tags-filter-group::-webkit-scrollbar-track,
+.browse-catalog #skills-filter-group::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.browse-catalog #tags-filter-group::-webkit-scrollbar-thumb,
+.browse-catalog #skills-filter-group::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.browse-catalog #tags-filter-group::-webkit-scrollbar-thumb:hover,
+.browse-catalog #skills-filter-group::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Firefox scrollbar styling */
+.browse-catalog #tags-filter-group,
+.browse-catalog #skills-filter-group {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
 .browse-catalog .catalog-main {
   flex: 1;
 }
