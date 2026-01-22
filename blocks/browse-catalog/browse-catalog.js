@@ -497,8 +497,7 @@ function createHeader() {
     <div class="catalog-search">
       <input type="text" class="search-input" placeholder="Search">
       <button class="filters-toggle">
-        <span>⚙️</span>
-        <span>Filters</span>
+        <span>Search</span>
       </button>
     </div>
   `;
