@@ -1,5 +1,6 @@
 import { fetchPlaceholders, getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
+import { getAccessToken } from '../course-overview/api-service.js';
 
 // media query match that indicates mobile/tablet width
 const isDesktop = window.matchMedia('(min-width: 900px)');
@@ -143,6 +144,129 @@ async function buildBreadcrumbsFromNavTree(nav, currentUrl) {
   return crumbs;
 }
 
+// Fetch user profile for header
+async function fetchUserProfileForHeader() {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      return null;
+    }
+
+    const response = await fetch(`https://learningmanager.adobe.com/primeapi/v2/user`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `oauth ${accessToken}`,
+        'Content-Type': 'application/vnd.api+json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching user profile for header:', error);
+    return null;
+  }
+}
+
+// Add user dropdown to nav tools
+async function addUserDropdown(navTools) {
+  try {
+    // Fetch user profile
+    const userProfile = await fetchUserProfileForHeader();
+    if (!userProfile) {
+      return; // Don't show dropdown if no user profile
+    }
+
+    const user = userProfile?.data;
+    const userName = user?.attributes?.name || 'User';
+    const userAvatar = user?.attributes?.avatarUrl || '';
+
+    // Create user dropdown element
+    const userDropdownDiv = document.createElement('div');
+    userDropdownDiv.className = 'user-dropdown';
+
+    userDropdownDiv.innerHTML = `
+      <div class="user-dropdown-container">
+        <button class="user-profile-btn" aria-expanded="false" aria-haspopup="true">
+          <div class="user-avatar">
+            ${userAvatar ? 
+              `<img src="${userAvatar}" alt="${userName}" class="avatar-image">` : 
+              `<div class="avatar-placeholder">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="16" fill="#e0e0e0"/>
+                  <circle cx="16" cy="12" r="5" fill="#999"/>
+                  <path d="M8 26c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="#999"/>
+                </svg>
+              </div>`
+            }
+          </div>
+          <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="user-dropdown-menu" role="menu">
+          <a href="/profile" class="dropdown-item" role="menuitem">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            Your Profile
+          </a>
+        </div>
+      </div>
+    `;
+
+    // Add to nav tools
+    navTools.appendChild(userDropdownDiv);
+
+    // Setup event listeners
+    setupUserDropdownEventListeners(userDropdownDiv);
+
+  } catch (error) {
+    console.error('Error adding user dropdown:', error);
+  }
+}
+
+// Setup dropdown event listeners
+function setupUserDropdownEventListeners(userDropdownDiv) {
+  const dropdownBtn = userDropdownDiv.querySelector('.user-profile-btn');
+  const dropdownMenu = userDropdownDiv.querySelector('.user-dropdown-menu');
+
+  if (!dropdownBtn || !dropdownMenu) return;
+
+  // Add click handler for dropdown toggle
+  dropdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isExpanded = dropdownBtn.getAttribute('aria-expanded') === 'true';
+    dropdownBtn.setAttribute('aria-expanded', !isExpanded);
+    dropdownMenu.classList.toggle('show', !isExpanded);
+  });
+
+  // Close dropdown when clicking outside
+  const closeDropdown = (e) => {
+    if (!userDropdownDiv.contains(e.target)) {
+      dropdownBtn.setAttribute('aria-expanded', 'false');
+      dropdownMenu.classList.remove('show');
+    }
+  };
+
+  // Close dropdown on escape key
+  const handleKeydown = (e) => {
+    if (e.key === 'Escape') {
+      dropdownBtn.setAttribute('aria-expanded', 'false');
+      dropdownMenu.classList.remove('show');
+    }
+  };
+
+  // Add event listeners
+  document.addEventListener('click', closeDropdown);
+  document.addEventListener('keydown', handleKeydown);
+}
+
 async function buildBreadcrumbs() {
   const breadcrumbs = document.createElement('nav');
   breadcrumbs.className = 'breadcrumbs';
@@ -217,6 +341,9 @@ export default async function decorate(block) {
     if (search && search.textContent === '') {
       search.setAttribute('aria-label', 'Search');
     }
+
+    // Add user dropdown directly
+    await addUserDropdown(navTools);
   }
 
   // hamburger for mobile
