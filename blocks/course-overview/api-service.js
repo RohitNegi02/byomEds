@@ -52,15 +52,33 @@ async function fetchLearnerCourseData(courseId) {
 // Enroll user in course
 async function enrollUser(courseId) {
   try {
-    const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}`;
+    const url = `${API_CONFIG.baseUrl}/enrollments`;
+    
+    const payload = {
+      data: {
+        type: 'learningObjectInstanceEnrollment',
+        attributes: {
+          loId: courseId
+        }
+      }
+    };
+    
+    console.log('Enroll API URL:', url);
+    console.log('Enroll payload:', JSON.stringify(payload, null, 2));
     
     const response = await fetch(url, {
       method: 'POST',
-      headers: API_CONFIG.getHeaders()
+      headers: {
+        ...API_CONFIG.getHeaders(),
+        'Content-Type': 'application/vnd.api+json'
+      },
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Enroll API error response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
     }
 
     const data = await response.json();
@@ -72,9 +90,14 @@ async function enrollUser(courseId) {
 }
 
 // Unenroll user from course
-async function unenrollUser(courseId) {
+async function unenrollUser(enrollmentId) {
   try {
-    const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}`;
+    // URL encode the enrollment ID to handle special characters like colons
+    const encodedEnrollmentId = encodeURIComponent(enrollmentId);
+    const url = `${API_CONFIG.baseUrl}/enrollments/${encodedEnrollmentId}`;
+    
+    console.log('Unenroll API URL:', url);
+    console.log('Unenroll enrollmentId:', enrollmentId);
     
     const response = await fetch(url, {
       method: 'DELETE',
@@ -82,7 +105,9 @@ async function unenrollUser(courseId) {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Unenroll API error response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
     }
 
     return true;

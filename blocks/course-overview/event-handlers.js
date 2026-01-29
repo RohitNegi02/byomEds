@@ -55,14 +55,14 @@ async function handleSaveAction(courseId) {
 }
 
 // Handle unenroll button click
-async function handleUnenrollAction(courseId) {
+async function handleUnenrollAction(enrollmentId) {
   const confirmUnenroll = confirm('Are you sure you want to unenroll from this course? Your progress will be lost.');
   if (!confirmUnenroll) {
     return;
   }
   
-  console.log('Unenrolling from course:', courseId);
-  const unenrollResult = await unenrollUser(courseId);
+  console.log('Unenrolling from course with enrollmentId:', enrollmentId);
+  const unenrollResult = await unenrollUser(enrollmentId);
   
   if (unenrollResult) {
     alert('Successfully unenrolled from the course!');
@@ -192,6 +192,19 @@ function setupEventListeners(block, courseId, learnerData) {
     });
   }
   
+  // Add event listener for start button (for enrolled users)
+  const startBtn = block.querySelector('.start-btn');
+  if (startBtn) {
+    startBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      console.log('Start button clicked, launching player for:', courseId);
+      const accessToken = getAccessToken();
+      const baseUrl = 'https://learningmanager.adobe.com';
+      const playerUrl = `${baseUrl}/app/player?lo_id=${courseId}&access_token=${accessToken}`;
+      createFluidicPlayerModal(playerUrl);
+    });
+  }
+  
   // Add event listener for save button
   const saveBtn = block.querySelector('.save-btn');
   if (saveBtn && !saveBtn.classList.contains('disabled')) {
@@ -203,10 +216,11 @@ function setupEventListeners(block, courseId, learnerData) {
   
   // Add event listener for unenroll button (only if enrolled)
   const unenrollBtn = block.querySelector('.unenroll-btn');
-  if (unenrollBtn) {
+  if (unenrollBtn && learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.enrollment) {
+    const enrollmentId = learnerData.data.relationships.enrollment.data.id;
     unenrollBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      await handleUnenrollAction(courseId);
+      await handleUnenrollAction(enrollmentId);
     });
   }
 
