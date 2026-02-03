@@ -22,7 +22,7 @@ function formatDate(isoDate) {
   const date = new Date(isoDate);
   const day = date.getDate();
   const month = date.toLocaleString('en-US', { month: 'short' });
-  return `${day} ${month}`;
+  return `${day} ${month}`; 
 }
 
 /**
