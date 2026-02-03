@@ -17,8 +17,8 @@ function formatDuration(seconds) {
  * @param {string} isoDate - ISO date string
  * @returns {string} - Formatted date (e.g., "29 Jun")
  */
-function formatDate(isoDate) {
-  if (!isoDate) return '';
+function formatDate(isoDate) { 
+  if (!isoDate) return ''; 
   const date = new Date(isoDate);
   const day = date.getDate();
   const month = date.toLocaleString('en-US', { month: 'short' });
