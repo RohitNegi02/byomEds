@@ -91,7 +91,7 @@ function extractDataFromCDN(block) {
 }
 
 // Create and show fluidic player modal
-function createFluidicPlayerModal(playerUrl) {
+function createFluidicPlayerModal(playerUrl, onCloseCallback) {
   // Create modal overlay
   const modalOverlay = document.createElement('div');
   modalOverlay.className = 'fluidic-modal-overlay';
@@ -128,10 +128,21 @@ function createFluidicPlayerModal(playerUrl) {
     border: none;
   `;
 
+  // Helper function to close modal and trigger callback
+  const closeModal = () => {
+    if (document.body.contains(modalOverlay)) {
+      document.body.removeChild(modalOverlay);
+      // Call the callback function if provided
+      if (onCloseCallback && typeof onCloseCallback === 'function') {
+        onCloseCallback();
+      }
+    }
+  };
+
   // Add event listeners
   modalOverlay.addEventListener('click', (e) => {
     if (e.target === modalOverlay) {
-      document.body.removeChild(modalOverlay);
+      closeModal();
     }
   });
 
@@ -139,9 +150,7 @@ function createFluidicPlayerModal(playerUrl) {
   window.addEventListener('message', function closePlayer(event) {
     if (event.data === 'status:close') {
       // Handle closing event from Adobe Learning Manager player
-      if (document.body.contains(modalOverlay)) {
-        document.body.removeChild(modalOverlay);
-      }
+      closeModal();
     }
   });
 
