@@ -251,7 +251,7 @@ main > .section:first-of-type {
 
 @media (width >= 900px) {
   main > .section > div {
-    padding: 0 32px;
+    padding: 15px 32px;
   }
 }
 
