@@ -116,9 +116,9 @@ function extractEnrollmentData(learnerData) {
   const currentRating = enrollmentData && enrollmentData.attributes && enrollmentData.attributes.rating 
     ? enrollmentData.attributes.rating : 0;
   
-  // Extract unenrollmentAllowed flag from enrollment data
-  const unenrollmentAllowed = enrollmentData && enrollmentData.attributes && enrollmentData.attributes.unenrollmentAllowed 
-    ? enrollmentData.attributes.unenrollmentAllowed : false;
+  // Extract unenrollmentAllowed flag from learning object attributes (not enrollment)
+  const unenrollmentAllowed = learnerData && learnerData.data && learnerData.data.attributes && learnerData.data.attributes.unenrollmentAllowed 
+    ? learnerData.data.attributes.unenrollmentAllowed : false;
   
   console.log('Current rating from API:', currentRating);
   console.log('Unenrollment allowed:', unenrollmentAllowed);
