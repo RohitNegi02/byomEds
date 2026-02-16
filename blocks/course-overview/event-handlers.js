@@ -15,9 +15,19 @@ async function handleEnrollmentAction(courseId) {
                       learnerData.data.relationships.enrollment;
     
     if (!isEnrolled) {
+      // Get the default instance ID from the course data
+      let instanceId = null;
+      if (learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.instances) {
+        const instances = learnerData.data.relationships.instances.data;
+        if (instances && instances.length > 0) {
+          // Get the first (default) instance ID
+          instanceId = instances[0].id;
+        }
+      }
+      
       // Enroll the user
-      console.log('Enrolling user in course:', courseId);
-      const enrollResult = await enrollUser(courseId);
+      console.log('Enrolling user in course:', courseId, 'instance:', instanceId);
+      const enrollResult = await enrollUser(courseId, instanceId);
       
       if (enrollResult) {
         alert('Successfully enrolled in the course!');

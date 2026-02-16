@@ -50,29 +50,29 @@ async function fetchLearnerCourseData(courseId) {
 }
 
 // Enroll user in course
-async function enrollUser(courseId) {
+async function enrollUser(courseId, instanceId) {
   try {
-    const url = `${API_CONFIG.baseUrl}/enrollments`;
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      console.error('No access token found');
+      return null;
+    }
+
+    // Build the full instance ID format (e.g., "course:12495374_13216648")
+    const loInstanceId = instanceId || `${courseId}_default`;
     
-    const payload = {
-      data: {
-        type: 'learningObjectInstanceEnrollment',
-        attributes: {
-          loId: courseId
-        }
-      }
-    };
+    // Use query parameters as per API specification
+    const url = `${API_CONFIG.baseUrl}/enrollments?loId=${courseId}&loInstanceId=${loInstanceId}&omitDeprecated=true&access_token=${accessToken}`;
     
     console.log('Enroll API URL:', url);
-    console.log('Enroll payload:', JSON.stringify(payload, null, 2));
+    console.log('Enroll parameters:', { loId: courseId, loInstanceId });
     
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        ...API_CONFIG.getHeaders(),
+        'Accept': 'application/vnd.api+json',
         'Content-Type': 'application/vnd.api+json'
-      },
-      body: JSON.stringify(payload)
+      }
     });
 
     if (!response.ok) {
