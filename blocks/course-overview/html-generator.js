@@ -148,10 +148,12 @@ function generateEnrolledHTML(data, courseId, learnerData, authorNames, skillsHt
           </div>
         </div>
         
-        <!-- Unenroll Button - Only show if enrolled -->
+        <!-- Unenroll Button - Only show if enrolled and unenrollment is allowed -->
+        ${enrollmentInfo.unenrollmentAllowed ? `
         <div class="sidebar-section">
           <button class="unenroll-btn" data-course-id="${courseId}">Unenroll from Course</button>
         </div>
+        ` : ''}
       </div>
     </div>
   `;

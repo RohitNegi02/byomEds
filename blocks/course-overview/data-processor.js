@@ -116,7 +116,12 @@ function extractEnrollmentData(learnerData) {
   const currentRating = enrollmentData && enrollmentData.attributes && enrollmentData.attributes.rating 
     ? enrollmentData.attributes.rating : 0;
   
+  // Extract unenrollmentAllowed flag from enrollment data
+  const unenrollmentAllowed = enrollmentData && enrollmentData.attributes && enrollmentData.attributes.unenrollmentAllowed 
+    ? enrollmentData.attributes.unenrollmentAllowed : false;
+  
   console.log('Current rating from API:', currentRating);
+  console.log('Unenrollment allowed:', unenrollmentAllowed);
   
   // Get module completion data from resource grades
   const resourceGrades = learnerData.included.filter(item => 
@@ -145,7 +150,8 @@ function extractEnrollmentData(learnerData) {
     resourceGrades,
     moduleResources,
     completedModules,
-    currentRating
+    currentRating,
+    unenrollmentAllowed
   };
 }
 

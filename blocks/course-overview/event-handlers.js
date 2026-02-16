@@ -140,8 +140,10 @@ function showTemporaryFeedback(ratingSection) {
     if (submitBtn) {
       submitBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        const enrollmentId = submitBtn.closest('.enrolled-sidebar').querySelector('.unenroll-btn')?.dataset.courseId;
-        if (enrollmentId) {
+        // Get the enrollment ID from the parent context
+        const unenrollBtn = submitBtn.closest('.enrolled-sidebar').querySelector('.unenroll-btn');
+        if (unenrollBtn && unenrollBtn.dataset.enrollmentId) {
+          const enrollmentId = unenrollBtn.dataset.enrollmentId;
           await handleRatingSubmission(enrollmentId, stars, ratingSection);
         }
       });
@@ -217,7 +219,14 @@ function setupEventListeners(block, courseId, learnerData) {
   // Add event listener for unenroll button (only if enrolled)
   const unenrollBtn = block.querySelector('.unenroll-btn');
   if (unenrollBtn && learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.enrollment) {
+    // Use the enrollment ID as-is from the API (format: course:courseId_instanceId_userId)
     const enrollmentId = learnerData.data.relationships.enrollment.data.id;
+    
+    console.log('Enrollment ID for unenroll:', enrollmentId);
+    
+    // Store the enrollment ID in the button for use in other handlers
+    unenrollBtn.dataset.enrollmentId = enrollmentId;
+    
     unenrollBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       await handleUnenrollAction(enrollmentId);
@@ -227,8 +236,11 @@ function setupEventListeners(block, courseId, learnerData) {
   // Add event listener for rating functionality (only if enrolled)
   const submitRatingBtn = block.querySelector('.submit-rating');
   if (submitRatingBtn && learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.enrollment) {
+    // Use the enrollment ID as-is from the API (format: course:courseId_instanceId_userId)
     const enrollmentId = learnerData.data.relationships.enrollment.data.id;
     const ratingSection = block.querySelector('.rating-section');
+    
+    console.log('Enrollment ID for rating:', enrollmentId);
     
     submitRatingBtn.addEventListener('click', async (e) => {
       e.preventDefault();
