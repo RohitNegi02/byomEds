@@ -1,41 +1,41 @@
 /* Profile Block Styles */
 .profile {
-  max-width: 1200px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 40px 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8f9fa;
+  padding: var(--spacing-4xl) var(--spacing-xl);
+  font-family: var(--font-family-system);
+  background-color: var(--color-background-light);
   min-height: 100vh;
 }
 
 /* Profile Container */
 .profile-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
 /* Profile Header */
 .profile-header {
-  padding: 40px 40px 20px 40px;
-  background: white;
+  padding: var(--spacing-4xl) var(--spacing-4xl) var(--spacing-xl) var(--spacing-4xl);
+  background: var(--color-background);
 }
 
 .profile-title {
   font-size: 2rem;
-  font-weight: 600;
-  color: #333;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 /* User Info Section */
 .user-info-section {
-  padding: 20px 40px 40px 40px;
-  background: #f8f9fa;
+  padding: var(--spacing-xl) var(--spacing-4xl) var(--spacing-4xl) var(--spacing-4xl);
+  background: var(--color-background-light);
   display: flex;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-2xl);
   position: relative;
 }
 
@@ -49,101 +49,101 @@
 .avatar-image {
   width: 120px;
   height: 120px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   object-fit: cover;
-  border: 4px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: var(--border-width-thick) solid var(--color-background);
+  box-shadow: var(--shadow-md);
 }
 
 .avatar-placeholder {
   width: 120px;
   height: 120px;
-  border-radius: 50%;
-  background: #e0e0e0;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: var(--border-width-thick) solid var(--color-background);
+  box-shadow: var(--shadow-md);
 }
 
 .user-details {
   flex: 1;
-  padding-top: 20px;
+  padding-top: var(--spacing-xl);
 }
 
 .user-name {
   font-size: 1.75rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 8px 0;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .user-email {
-  font-size: 1rem;
-  color: #666;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .change-image-btn {
   background: none;
   border: none;
-  color: #4f46e5;
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--color-primary-600);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
-  margin-top: 16px;
+  margin-top: var(--spacing-lg);
 }
 
 .change-image-btn:hover {
-  color: #4338ca;
+  color: var(--color-primary-700);
 }
 
 /* Skills Section */
 .skills-section {
-  padding: 40px;
-  background: white;
-  border-top: 1px solid #e0e0e0;
+  padding: var(--spacing-4xl);
+  background: var(--color-background);
+  border-top: var(--border-width-thin) solid var(--color-border);
 }
 
 .section-title {
   font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 16px 0;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
 }
 
 .section-description {
-  font-size: 1rem;
-  color: #666;
-  margin: 0 0 32px 0;
-  line-height: 1.5;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-8) 0;
+  line-height: var(--line-height-relaxed);
 }
 
 /* Skills Grid */
 .skills-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-8);
 }
 
 .skill-interest-item {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 24px;
+  background: var(--color-background-light);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-2xl);
   text-align: center;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   cursor: pointer;
   position: relative;
 }
 
 .skill-interest-item:hover {
-  background: #f0f0f0;
-  border-color: #d0d0d0;
+  background: var(--color-background-hover);
+  border-color: var(--color-border-dark);
 }
 
 .skill-interest-item:hover .delete-skill-btn {
@@ -152,20 +152,20 @@
 }
 
 .skill-name {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 /* Delete Skill Button */
 .delete-skill-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
   background: rgba(102, 102, 102, 0.9);
-  color: white;
+  color: var(--color-text-inverse);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   width: 28px;
   height: 28px;
   display: flex;
@@ -174,9 +174,9 @@
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   z-index: 2;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .delete-skill-btn:hover {
@@ -205,12 +205,12 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 20px;
-  height: 20px;
+  width: var(--spacing-xl);
+  height: var(--spacing-xl);
   margin: -10px 0 0 -10px;
-  border: 2px solid #ccc;
-  border-top-color: #4f46e5;
-  border-radius: 50%;
+  border: var(--border-width-medium) solid var(--color-neutral-400);
+  border-top-color: var(--color-primary-600);
+  border-radius: var(--radius-full);
   animation: spin 1s linear infinite;
 }
 
@@ -240,26 +240,26 @@
 }
 
 .tooltip-content {
-  background: #333;
-  color: white;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: var(--color-neutral-1100);
+  color: var(--color-text-inverse);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-3xl);
   min-width: 200px;
   text-align: left;
 }
 
 .tooltip-content h4 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-inverse);
 }
 
 .tooltip-content p {
-  margin: 0 0 12px 0;
-  font-size: 0.875rem;
-  color: #ccc;
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-400);
 }
 
 
@@ -270,20 +270,20 @@
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid #333;
+  border-left: var(--spacing-sm) solid transparent;
+  border-right: var(--spacing-sm) solid transparent;
+  border-top: var(--spacing-sm) solid var(--color-neutral-1100);
 }
 
 /* No Skills State */
 .no-skills {
   text-align: center;
-  padding: 40px 20px;
-  color: #666;
+  padding: var(--spacing-4xl) var(--spacing-xl);
+  color: var(--color-text-secondary);
 }
 
 .no-skills p {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   margin: 0;
 }
 
@@ -294,73 +294,73 @@
 }
 
 .modify-interest-btn {
-  background: #4f46e5;
-  color: white;
+  background: var(--color-primary-600);
+  color: var(--color-text-inverse);
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: var(--spacing-md) var(--spacing-2xl);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--transition-colors);
 }
 
 .modify-interest-btn:hover {
-  background: #4338ca;
+  background: var(--color-primary-700);
 }
 
 /* Profile Footer */
 .profile-footer {
-  padding: 40px;
-  background: white;
-  border-top: 1px solid #e0e0e0;
+  padding: var(--spacing-4xl);
+  background: var(--color-background);
+  border-top: var(--border-width-thin) solid var(--color-border);
   display: flex;
   justify-content: flex-end;
 }
 
 .save-changes-btn {
-  background: #4f46e5;
-  color: white;
+  background: var(--color-primary-600);
+  color: var(--color-text-inverse);
   border: none;
-  padding: 14px 28px;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
+  padding: var(--spacing-4) 28px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--transition-colors);
 }
 
 .save-changes-btn:hover {
-  background: #4338ca;
+  background: var(--color-primary-700);
 }
 
 /* Loading and Error States */
 .loading {
   text-align: center;
-  padding: 60px 20px;
+  padding: 60px var(--spacing-xl);
   font-size: 1.1rem;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .error {
   text-align: center;
-  padding: 60px 20px;
+  padding: 60px var(--spacing-xl);
   font-size: 1.1rem;
-  color: #dc3545;
-  background: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  margin: 20px;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: var(--border-width-thin) solid var(--color-error-border);
+  border-radius: var(--radius-card);
+  margin: var(--spacing-xl);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .profile {
-    padding: 20px 10px;
+    padding: var(--spacing-xl) 10px;
   }
 
   .profile-header {
-    padding: 30px 20px 15px 20px;
+    padding: var(--spacing-8) var(--spacing-xl) var(--spacing-4) var(--spacing-xl);
   }
 
   .profile-title {
@@ -368,14 +368,14 @@
   }
 
   .user-info-section {
-    padding: 15px 20px 30px 20px;
+    padding: var(--spacing-4) var(--spacing-xl) var(--spacing-8) var(--spacing-xl);
     flex-direction: column;
     align-items: center;
     text-align: center;
   }
 
   .user-details {
-    padding-top: 16px;
+    padding-top: var(--spacing-lg);
   }
 
   .user-name {
@@ -384,11 +384,11 @@
 
   .change-image-btn {
     position: static;
-    margin-top: 16px;
+    margin-top: var(--spacing-lg);
   }
 
   .skills-section {
-    padding: 30px 20px;
+    padding: var(--spacing-8) var(--spacing-xl);
   }
 
   .section-title {
@@ -397,15 +397,15 @@
 
   .skills-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--spacing-md);
   }
 
   .skill-interest-item {
-    padding: 20px;
+    padding: var(--spacing-xl);
   }
 
   .profile-footer {
-    padding: 30px 20px;
+    padding: var(--spacing-8) var(--spacing-xl);
   }
 
   .save-changes-btn {
@@ -425,97 +425,97 @@
   }
 
   .user-email {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
   }
 
   .skill-interest-item {
-    padding: 16px;
+    padding: var(--spacing-lg);
   }
 
   .skill-name {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
   }
 }
 
 /* Skill Selection Styles */
 .skill-selection-item {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 24px;
+  background: var(--color-background-light);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-2xl);
   text-align: center;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   cursor: pointer;
   position: relative;
 }
 
 .skill-selection-item:hover {
-  background: #f0f0f0;
-  border-color: #d0d0d0;
+  background: var(--color-background-hover);
+  border-color: var(--color-border-dark);
 }
 
 .skill-selection-item.selected {
   background: #e3f2fd;
-  border: 2px solid #4f46e5;
-  border-color: #4f46e5;
+  border: var(--border-width-medium) solid var(--color-primary-600);
+  border-color: var(--color-primary-600);
 }
 
 .skill-selection-item.selected .skill-name {
-  color: #4f46e5;
-  font-weight: 600;
+  color: var(--color-primary-600);
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Skill Selection Actions */
 .skill-selection-actions {
   display: flex;
-  gap: 16px;
-  margin-top: 32px;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-8);
   justify-content: flex-start;
 }
 
 .add-interest-btn {
-  background: #4f46e5;
-  color: white;
+  background: var(--color-primary-600);
+  color: var(--color-text-inverse);
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: var(--spacing-md) var(--spacing-2xl);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .add-interest-btn:hover:not(:disabled) {
-  background: #4338ca;
+  background: var(--color-primary-700);
 }
 
 .add-interest-btn:disabled {
-  background: #9ca3af;
+  background: var(--color-neutral-700);
   cursor: not-allowed;
 }
 
 .cancel-selection-btn {
   background: transparent;
-  color: #4f46e5;
-  border: 2px solid #4f46e5;
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--color-primary-600);
+  border: var(--border-width-medium) solid var(--color-primary-600);
+  padding: var(--spacing-4) var(--spacing-2xl);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .cancel-selection-btn:hover {
-  background: #4f46e5;
-  color: white;
+  background: var(--color-primary-600);
+  color: var(--color-text-inverse);
 }
 
 /* Animation for skill items */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(var(--spacing-4));
   }
   to {
     opacity: 1;
@@ -525,18 +525,18 @@
 
 .skill-interest-item,
 .skill-selection-item {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn var(--transition-slow) var(--ease-out);
 }
 
 /* Focus states for accessibility */
 .modify-interest-btn:focus,
 .save-changes-btn:focus,
 .change-image-btn:focus {
-  outline: 2px solid #4f46e5;
-  outline-offset: 2px;
+  outline: var(--border-width-medium) solid var(--color-primary-600);
+  outline-offset: var(--spacing-0);
 }
 
 .skill-interest-item:focus {
-  outline: 2px solid #4f46e5;
-  outline-offset: 2px;
+  outline: var(--border-width-medium) solid var(--color-primary-600);
+  outline-offset: var(--spacing-0);
 }
