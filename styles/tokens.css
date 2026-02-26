@@ -1,0 +1,331 @@
+/*
+ * Design Tokens
+ * 
+ * This file contains all design system tokens (CSS custom properties) used across the application.
+ * These tokens provide a single source of truth for colors, spacing, typography, borders, shadows, and transitions.
+ * 
+ * Usage: Use these tokens in component CSS files instead of hardcoded values.
+ * Example: color: var(--color-primary-600); instead of color: #4f46e5;
+ */
+
+:root {
+  /* ============================================
+     COLOR SYSTEM
+     ============================================ */
+
+  /* Primary Colors (Blue variants) */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;  /* Main primary color */
+  --color-primary-700: #4338ca;  /* Primary hover/dark */
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+
+  /* Alternative Primary Blues */
+  --color-blue-500: #1473e6;
+  --color-blue-600: #0D66D0;
+  --color-blue-700: #0052a3;
+  --color-blue-800: #0066cc;
+  --color-link: #3b63fb;
+  --color-link-hover: #1d3ecf;
+
+  /* Neutral Colors (Gray scale) */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #f0f0f0;
+  --color-neutral-300: #e8e8e8;
+  --color-neutral-400: #e0e0e0;
+  --color-neutral-500: #d0d0d0;
+  --color-neutral-600: #d4d4d4;
+  --color-neutral-700: #999;
+  --color-neutral-800: #707070;
+  --color-neutral-900: #6e6e6e;
+  --color-neutral-950: #666;
+  --color-neutral-1000: #505050;
+  --color-neutral-1100: #333;
+  --color-neutral-1200: #2c2c2c;
+  --color-neutral-1300: #131313;
+
+  /* Semantic Colors */
+  --color-success: #4caf50;
+  --color-success-light: #2e7d32;
+  --color-success-bg: #e8f5e8;
+  --color-success-border: #c8e6c9;
+
+  --color-warning: #ff9800;
+  --color-warning-light: #ffc107;
+  --color-warning-bg: #fff3e0;
+  --color-warning-border: #ffcc02;
+  --color-warning-text: #f57c00;
+
+  --color-error: #dc3545;
+  --color-error-light: #c62828;
+  --color-error-bg: #f8d7da;
+  --color-error-border: #f5c6cb;
+  --color-error-border-alt: #ffcdd2;
+
+  --color-info: #4285f4;
+
+  /* Background Colors */
+  --color-background: white;
+  --color-background-light: #f8f9fa;
+  --color-background-lighter: #f8f8f8;
+  --color-background-gray: #f5f5f5;
+  --color-background-hover: #f0f0f0;
+
+  /* Text Colors */
+  --color-text: #131313;
+  --color-text-primary: #333;
+  --color-text-secondary: #666;
+  --color-text-tertiary: #707070;
+  --color-text-quaternary: #6e6e6e;
+  --color-text-muted: #64748b;
+  --color-text-light: #475569;
+  --color-text-dark: #2c2c2c;
+  --color-text-inverse: white;
+
+  /* Border Colors */
+  --color-border: #e0e0e0;
+  --color-border-light: #e8e8e8;
+  --color-border-lighter: #f0f0f0;
+  --color-border-dark: #d0d0d0;
+  --color-border-darker: #d4d4d4;
+  --color-border-hover: #999;
+  --color-border-focus: #4f46e5;
+
+  /* Overlay Colors */
+  --color-overlay: rgba(0, 0, 0, 0.8);
+  --color-overlay-light: rgba(0, 0, 0, 0.3);
+  --color-overlay-dark: rgba(100, 100, 100, 0.85);
+  --color-overlay-white: rgba(255, 255, 255, 0.95);
+  --color-overlay-white-light: rgba(255, 255, 255, 0.2);
+  --color-overlay-white-medium: rgba(255, 255, 255, 0.3);
+
+  /* ============================================
+     SPACING SYSTEM
+     ============================================ */
+
+  /* Base Spacing Scale (4px increments) */
+  --spacing-0: 0;
+  --spacing-1: 4px;
+  --spacing-2: 6px;
+  --spacing-3: 8px;
+  --spacing-4: 12px;
+  --spacing-5: 16px;
+  --spacing-6: 20px;
+  --spacing-7: 24px;
+  --spacing-8: 32px;
+  --spacing-9: 40px;
+  --spacing-10: 48px;
+  --spacing-11: 56px;
+  --spacing-12: 64px;
+
+  /* Semantic Spacing */
+  --spacing-xs: var(--spacing-1);    /* 4px */
+  --spacing-sm: var(--spacing-3);     /* 8px */
+  --spacing-md: var(--spacing-4);     /* 12px */
+  --spacing-lg: var(--spacing-5);     /* 16px */
+  --spacing-xl: var(--spacing-6);     /* 20px */
+  --spacing-2xl: var(--spacing-7);    /* 24px */
+  --spacing-3xl: var(--spacing-8);    /* 32px */
+  --spacing-4xl: var(--spacing-9);    /* 40px */
+
+  /* Component-specific Spacing */
+  --spacing-card-padding: var(--spacing-6);
+  --spacing-card-padding-sm: var(--spacing-5);
+  --spacing-section-padding: var(--spacing-9);
+  --spacing-section-padding-sm: var(--spacing-6);
+  --spacing-button-padding-x: var(--spacing-7);
+  --spacing-button-padding-y: var(--spacing-4);
+  --spacing-button-padding-y-sm: var(--spacing-3);
+  --spacing-input-padding-x: var(--spacing-4);
+  --spacing-input-padding-y: var(--spacing-3);
+
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+
+  /* Font Families (from existing styles.css) */
+  --font-family-body: roboto, roboto-fallback, sans-serif;
+  --font-family-heading: roboto-condensed, roboto-condensed-fallback, sans-serif;
+  --font-family-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Font Sizes (from existing styles.css, expanded) */
+  --font-size-xs: 14px;
+  --font-size-sm: 16px;
+  --font-size-base: 18px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 28px;
+  --font-size-3xl: 32px;
+  --font-size-4xl: 36px;
+  --font-size-5xl: 44px;
+  --font-size-6xl: 45px;
+  --font-size-7xl: 55px;
+
+  /* Body Font Sizes (from existing styles.css) */
+  --body-font-size-xs: 17px;
+  --body-font-size-s: 19px;
+  --body-font-size-m: 22px;
+
+  /* Heading Font Sizes (from existing styles.css) */
+  --heading-font-size-xs: 22px;
+  --heading-font-size-s: 24px;
+  --heading-font-size-m: 27px;
+  --heading-font-size-l: 34px;
+  --heading-font-size-xl: 44px;
+  --heading-font-size-xxl: 55px;
+
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.4;
+  --line-height-relaxed: 1.5;
+  --line-height-loose: 1.6;
+  --line-height-base: 1.25;
+
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.5px;
+
+  /* ============================================
+     BORDERS & RADIUS
+     ============================================ */
+
+  /* Border Width */
+  --border-width-none: 0;
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  --border-width-thick: 4px;
+
+  /* Border Radius */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-4xl: 25px;
+  --radius-full: 50%;
+  --radius-button: 25px;
+  --radius-button-sm: 20px;
+  --radius-card: 8px;
+  --radius-input: 5px;
+
+  /* ============================================
+     SHADOWS
+     ============================================ */
+
+  /* Elevation Levels */
+  --shadow-none: none;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --shadow-2xl: 0 8px 30px rgba(0, 0, 0, 0.15);
+  --shadow-3xl: 0 20px 40px rgba(0, 0, 0, 0.3);
+
+  /* Colored Shadows */
+  --shadow-primary: 0 4px 12px rgba(0, 102, 204, 0.3);
+  --shadow-primary-sm: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-primary-lg: 0 2px 15px rgba(0, 0, 0, 0.08);
+
+  /* ============================================
+     TRANSITIONS
+     ============================================ */
+
+  /* Duration */
+  --transition-fast: 0.15s;
+  --transition-base: 0.2s;
+  --transition-slow: 0.3s;
+  --transition-slower: 0.4s;
+
+  /* Easing Functions */
+  --ease-linear: linear;
+  --ease-in: ease-in;
+  --ease-out: ease-out;
+  --ease-in-out: ease-in-out;
+  --ease-default: ease;
+
+  /* Common Transitions */
+  --transition-all: all var(--transition-base) var(--ease-default);
+  --transition-colors: color var(--transition-base) var(--ease-default), background-color var(--transition-base) var(--ease-default), border-color var(--transition-base) var(--ease-default);
+  --transition-opacity: opacity var(--transition-base) var(--ease-default);
+  --transition-transform: transform var(--transition-base) var(--ease-default);
+  --transition-shadow: box-shadow var(--transition-base) var(--ease-default);
+
+  /* ============================================
+     Z-INDEX SCALE
+     ============================================ */
+
+  --z-index-base: 0;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-max: 10000;
+
+  /* ============================================
+     LAYOUT
+     ============================================ */
+
+  /* Container Widths */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1400px;
+  --container-max: 1200px;
+
+  /* Nav Heights */
+  --nav-height: 64px;
+  --breadcrumbs-height: 34px;
+  --header-height: var(--nav-height);
+
+  /* ============================================
+     RESPONSIVE BREAKPOINTS
+     ============================================ */
+
+  /* Note: These are for reference in comments. Actual breakpoints should use media queries */
+  /* Mobile: < 600px */
+  /* Tablet: 600px - 900px */
+  /* Desktop: >= 900px */
+  /* Large Desktop: >= 1200px */
+}
+
+/* Responsive Typography Adjustments (from existing styles.css) */
+@media (width >= 900px) {
+  :root {
+    --body-font-size-xs: 14px;
+    --body-font-size-s: 16px;
+    --body-font-size-m: 18px;
+
+    --heading-font-size-xxl: 45px;
+    --heading-font-size-xl: 36px;
+    --heading-font-size-l: 28px;
+    --heading-font-size-m: 22px;
+    --heading-font-size-s: 20px;
+    --heading-font-size-xs: 18px;
+  }
+}
+
+@media (width >= 900px) {
+  :root {
+    --header-height: calc(var(--nav-height) + var(--breadcrumbs-height));
+  }
+}

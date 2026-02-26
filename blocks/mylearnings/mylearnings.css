@@ -1,7 +1,7 @@
 .mylearning-wrapper {
-  max-width: 1400px;
+  max-width: var(--container-2xl);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--spacing-2xl);
 }
 
 .mylearning {
@@ -12,64 +12,64 @@
   display: flex;
   justify-content: space-between;
   align-items: center; 
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-8);
 }
 
 .mylearning-header h2 {
-  font-size: 32px;
-  font-weight: 400;
-  color: #2c2c2c;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-dark);
   margin: 0;
 } 
 
 .mylearning-navigation {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-md);
 }
 
 .mylearning-nav-button {
-  width: 48px;
-  height: 48px;
-  border: 1px solid #d0d0d0;
-  border-radius: 50%;
-  background: white;
+  width: var(--spacing-10);
+  height: var(--spacing-10);
+  border: var(--border-width-thin) solid var(--color-border-dark);
+  border-radius: var(--radius-full);
+  background: var(--color-background);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: var(--transition-all);
   padding: 0;
   margin: 0;
 }
 
 .mylearning-nav-button:hover {
-  background: #f5f5f5;
-  border-color: #999;
+  background: var(--color-background-gray);
+  border-color: var(--color-neutral-700);
 }
 
 .mylearning-nav-button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  background: white;
+  background: var(--color-background);
 }
 
 .mylearning-nav-button::before {
   content: '';
   display: block;
-  width: 12px;
-  height: 12px;
-  border-top: 2px solid #333;
-  border-right: 2px solid #333;
+  width: var(--spacing-md);
+  height: var(--spacing-md);
+  border-top: var(--border-width-medium) solid var(--color-neutral-1100);
+  border-right: var(--border-width-medium) solid var(--color-neutral-1100);
 }
 
 .mylearning-nav-button.prev::before {
   transform: rotate(-135deg);
-  margin-left: 4px;
+  margin-left: var(--spacing-1);
 }
 
 .mylearning-nav-button.next::before {
   transform: rotate(45deg);
-  margin-right: 4px;
+  margin-right: var(--spacing-1);
 }
 
 .mylearning-scroll-container {
@@ -86,7 +86,7 @@
 
 .mylearning-list {
   display: flex;
-  gap: 24px;
+  gap: var(--spacing-2xl);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -94,16 +94,16 @@
 
 .mylearning-card {
   flex: 0 0 400px;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  background: var(--color-background);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-shadow);
 }
 
 .mylearning-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .mylearning-card-image {
@@ -121,93 +121,93 @@
 
 .mylearning-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
   width: 44px;
   height: 44px;
-  background: rgba(100, 100, 100, 0.85);
-  border-radius: 50%;
+  background: var(--color-overlay-dark);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .mylearning-badge.has-rating {
   width: auto;
   height: auto;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 6px 12px;
+  background: var(--color-overlay-white);
+  border-radius: var(--radius-button-sm);
+  padding: var(--spacing-2) var(--spacing-md);
   display: flex;
   align-items: center;
-  gap: 6px;
-  top: 12px;
-  left: 12px;
+  gap: var(--spacing-2);
+  top: var(--spacing-md);
+  left: var(--spacing-md);
   right: auto;
 }
 
 .mylearning-stars {
   display: flex;
-  gap: 2px;
+  gap: var(--spacing-0);
 }
 
 .mylearning-star {
-  font-size: 16px;
-  color: #ddd;
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-400);
 }
 
 .mylearning-star.filled {
-  color: #ffc107;
+  color: var(--color-warning-light);
 }
 
 .mylearning-rating-count {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-left: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-left: var(--spacing-1);
 }
 
 .mylearning-card-body {
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .mylearning-card-title {
-  font-size: 18px;
-  font-weight: 400;
-  color: #2c2c2c;
-  margin: 0 0 8px 0;
-  line-height: 1.4;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-dark);
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: var(--line-height-normal);
   min-height: 50px;
 }
 
 .mylearning-card-category {
-  font-size: 14px;
-  color: #707070;
-  margin: 0 0 8px 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .mylearning-card-meta {
-  font-size: 14px;
-  color: #707070;
-  margin: 0 0 16px 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--spacing-lg) 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .mylearning-card-meta::after {
   content: '•';
-  margin: 0 4px;
+  margin: 0 var(--spacing-1);
 }
 
 .mylearning-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-lg);
 }
 
 .mylearning-progress {
@@ -216,48 +216,48 @@
 
 .mylearning-progress-text {
   font-size: 13px;
-  color: #707070;
-  margin: 0 0 8px 0;
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .mylearning-progress-bar {
   width: 100%;
-  height: 6px;
-  background: #e8e8e8;
+  height: var(--spacing-2);
+  background: var(--color-border-light);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .mylearning-progress-fill {
   height: 100%;
-  background: #4a4a4a;
+  background: var(--color-neutral-1200);
   border-radius: 3px;
-  transition: width 0.3s ease;
+  transition: width var(--transition-slow) var(--ease-default);
 }
 
 .mylearning-continue-btn {
-  padding: 10px 32px;
-  background: white;
-  color: #1473e6;
-  border: 2px solid #1473e6;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: var(--spacing-4) var(--spacing-8);
+  background: var(--color-background);
+  color: var(--color-blue-500);
+  border: var(--border-width-medium) solid var(--color-blue-500);
+  border-radius: var(--radius-button-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-all);
   text-transform: uppercase;
   white-space: nowrap;
   margin: 0;
 }
 
 .mylearning-continue-btn:hover {
-  background: #1473e6;
-  color: white;
+  background: var(--color-blue-500);
+  color: var(--color-text-inverse);
 }
 
 /* Go to My Learning card styles */
 .mylearning-card-goto {
-  background: #f5f5f5;
+  background: var(--color-background-gray);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -271,7 +271,7 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  padding: 40px 20px;
+  padding: var(--spacing-4xl) var(--spacing-xl);
 }
 
 .mylearning-goto-body {
@@ -283,15 +283,15 @@
 }
 
 .mylearning-goto-title {
-  color: #1473e6;
-  font-size: 24px;
-  font-weight: 400;
+  color: var(--color-blue-500);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-normal);
   margin: 0;
   min-height: auto;
 }
 
 .mylearning-card-goto:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .mylearning-card-goto:hover .mylearning-goto-title {
@@ -304,16 +304,16 @@
   }
 
   .mylearning-header h2 {
-    font-size: 24px;
+    font-size: var(--font-size-xl);
   }
 
   .mylearning-card-title {
-    font-size: 16px;
+    font-size: var(--font-size-sm);
     min-height: auto;
   }
 
   .mylearning-continue-btn {
-    padding: 8px 24px;
+    padding: var(--spacing-sm) var(--spacing-2xl);
     font-size: 13px;
   }
 }
@@ -324,15 +324,15 @@
   }
 
   .mylearning-wrapper {
-    padding: 0 16px;
+    padding: 0 var(--spacing-lg);
   }
 
   .mylearning-navigation {
-    gap: 8px;
+    gap: var(--spacing-sm);
   }
 
   .mylearning-nav-button {
-    width: 40px;
-    height: 40px;
+    width: var(--spacing-4xl);
+    height: var(--spacing-4xl);
   }
 }
