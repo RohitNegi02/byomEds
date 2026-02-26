@@ -1,5 +1,6 @@
 import { createOptimizedPicture } from '../../scripts/aem.js';
 import { createFluidicPlayerModal } from '../course-overview/ui-components.js';
+import { getAlmAccessToken } from '../../scripts/alm-token.js';
 
 /**
  * Converts duration in seconds to minutes format
@@ -124,7 +125,7 @@ function transformLearningObjectToCard(learningObject, included) {
 async function fetchLearningObjects() {
   try {
     // Get access token from session storage
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
 
     if (!accessToken) {
       console.warn('No access token found in session storage');
@@ -300,7 +301,7 @@ function createCard(cardData) {
     e.stopPropagation();
 
     // Get access token from session storage
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
 
     if (!accessToken) {
       console.error('No access token found');

@@ -1,13 +1,15 @@
 // API Service for Course Overview
 // Handles all API calls and data fetching
 
+import { getAlmAccessToken } from '../../scripts/alm-token.js';
+
 // Cache access token to avoid repeated sessionStorage calls
 let cachedAccessToken = null;
 
 // Get access token (cached)
 function getAccessToken() {
   if (!cachedAccessToken) {
-    cachedAccessToken = sessionStorage.getItem('alm_access_token');
+    cachedAccessToken = getAlmAccessToken();
   }
   return cachedAccessToken;
 }

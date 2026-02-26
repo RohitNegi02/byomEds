@@ -1,9 +1,11 @@
+import { getAlmAccessToken } from '../../scripts/alm-token.js';
+
 // API Configuration
 const API_CONFIG = {
   baseUrl: 'https://learningmanager.adobe.com/primeapi/v2',
   headers: {
     'Accept': 'application/vnd.api+json',
-    'Authorization': `oauth ${sessionStorage.getItem('alm_access_token')}`
+    'Authorization': `oauth ${getAlmAccessToken()}`
   }
 };
 

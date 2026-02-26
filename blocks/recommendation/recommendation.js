@@ -1,5 +1,6 @@
 import { createOptimizedPicture } from '../../scripts/aem.js';
 import { createFluidicPlayerModal } from '../course-overview/ui-components.js';
+import { getAlmAccessToken } from '../../scripts/alm-token.js';
 
 /**
  * Fetch enrollment state for a learning object
@@ -9,7 +10,7 @@ import { createFluidicPlayerModal } from '../course-overview/ui-components.js';
  */
 async function fetchEnrollmentState(learningObjectId, instanceId) {
   try {
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
     if (!accessToken) {
       console.warn('No access token found');
       return null;
@@ -202,7 +203,7 @@ function parseApiResponse(apiResponse) {
  */
 async function fetchRecommendationStrip(stripNumber) {
   try {
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
 
     if (!accessToken) {
       console.warn('No access token found in session storage');
@@ -284,7 +285,7 @@ function createGoToCatalogCard() {
  */
 async function enrollUser(learningObjectId, instanceId) {
   try {
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
     if (!accessToken) {
       console.error('No access token found');
       return false;
@@ -321,7 +322,7 @@ async function enrollUser(learningObjectId, instanceId) {
  */
 async function checkBookmarkStatus(learningObjectId) {
   try {
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
     if (!accessToken) {
       return false;
     }
@@ -341,7 +342,7 @@ async function checkBookmarkStatus(learningObjectId) {
  */
 async function saveBookmark(learningObjectId) {
   try {
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
     if (!accessToken) {
       console.error('No access token found');
       return false;
@@ -375,7 +376,7 @@ async function saveBookmark(learningObjectId) {
  */
 async function unsaveBookmark(learningObjectId) {
   try {
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
     if (!accessToken) {
       console.error('No access token found');
       return false;
@@ -455,7 +456,7 @@ function showAddButtonSpinner(button) {
  */
 async function fetchLearningObjectDetails(learningObjectId) {
   try {
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
     if (!accessToken) {
       console.warn('No access token found');
       return null;
@@ -872,7 +873,7 @@ function createRecommendationCard(cardData, refreshCallback) {
     e.stopPropagation();
 
     const { learningObjectId, instanceId } = actionButton.dataset;
-    const accessToken = sessionStorage.getItem('alm_access_token');
+    const accessToken = getAlmAccessToken();
 
     if (!accessToken) {
       console.error('No access token found');
