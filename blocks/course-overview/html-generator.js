@@ -3,6 +3,67 @@
 
 import { formatDuration } from './ui-components.js';
 
+// Create a module item element using createElement
+function createModuleItem(module) {
+  const moduleItem = document.createElement('div');
+  moduleItem.className = `module-item ${module.statusClass || ''}`;
+  moduleItem.dataset.resourceId = module.id || module.resourceId;
+
+  const moduleIcon = document.createElement('div');
+  moduleIcon.className = 'module-icon';
+  moduleIcon.textContent = module.moduleIcon || module.icon;
+
+  const moduleContent = document.createElement('div');
+  moduleContent.className = 'module-content';
+
+  const moduleLeft = document.createElement('div');
+  moduleLeft.className = 'module-left';
+
+  const moduleHeader = document.createElement('div');
+  moduleHeader.className = 'module-header';
+
+  const moduleFormat = document.createElement('span');
+  moduleFormat.className = 'module-format';
+  moduleFormat.textContent = module.format || 'SELF PACED';
+
+  moduleHeader.appendChild(moduleFormat);
+
+  const moduleTitle = document.createElement('div');
+  moduleTitle.className = 'module-title';
+
+  const moduleName = document.createElement('h4');
+  moduleName.className = 'module-name';
+  moduleName.textContent = module.name || module.title;
+
+  moduleTitle.appendChild(moduleName);
+  moduleLeft.appendChild(moduleHeader);
+  moduleLeft.appendChild(moduleTitle);
+
+  const moduleMeta = document.createElement('div');
+  moduleMeta.className = 'module-meta';
+
+  const moduleDuration = document.createElement('span');
+  moduleDuration.className = 'module-duration';
+  moduleDuration.textContent = module.duration;
+
+  moduleMeta.appendChild(moduleDuration);
+
+  if (module.statusText) {
+    const moduleStatus = document.createElement('span');
+    moduleStatus.className = 'module-status';
+    moduleStatus.innerHTML = `${module.statusIcon} ${module.statusText}`;
+    moduleMeta.appendChild(moduleStatus);
+  }
+
+  moduleContent.appendChild(moduleLeft);
+  moduleContent.appendChild(moduleMeta);
+
+  moduleItem.appendChild(moduleIcon);
+  moduleItem.appendChild(moduleContent);
+
+  return moduleItem;
+}
+
 // Generate enrolled user HTML layout
 function generateEnrolledHTML(data, courseId, learnerData, authorNames, skillsHtml, enrollmentInfo, processedModules, testoutModules = [], hasNotes = false) {
   const { progressPercent, completedModules, moduleResources } = enrollmentInfo;
@@ -56,26 +117,7 @@ function generateEnrolledHTML(data, courseId, learnerData, authorNames, skillsHt
             Core Content 
             <span class="duration-badge">${Math.floor(learnerData.data.attributes.duration / 60)} mins ${learnerData.data.attributes.duration % 60} secs</span>
           </h3>
-          <div class="modules-list">
-            ${processedModules.map(module => `
-              <div class="module-item ${module.statusClass}" data-resource-id="${module.id}">
-                <div class="module-icon">${module.moduleIcon}</div>
-                <div class="module-content">
-                  <div class="module-left">
-                    <div class="module-header">
-                      <span class="module-format">SELF PACED</span>
-                    </div>
-                    <div class="module-title">
-                      <h4 class="module-name">${module.name}</h4>
-                    </div>
-                  </div>
-                  <div class="module-meta">
-                    <span class="module-duration">${module.duration}</span>
-                    ${module.statusText ? `<span class="module-status">${module.statusIcon} ${module.statusText}</span>` : ''}
-                  </div>
-                </div>
-              </div>
-            `).join('')}
+          <div class="modules-list" data-modules-container="enrolled">
           </div>
           
           
@@ -189,25 +231,7 @@ function generateNonEnrolledHTML(data, courseId, authorNames) {
             Core Content 
             <span class="duration-badge">41m</span>
           </h3>
-          <div class="modules-list">
-            ${data.modules.map(module => `
-              <div class="module-item" data-resource-id="${module.resourceId}">
-                <div class="module-icon">${module.icon}</div>
-                <div class="module-content">
-                  <div class="module-left">
-                    <div class="module-header">
-                      <span class="module-format">${module.format}</span>
-                    </div>
-                    <div class="module-title">
-                      <h4 class="module-name">${module.title}</h4>
-                    </div>
-                  </div>
-                  <div class="module-meta">
-                    <span class="module-duration">${module.duration}</span>
-                  </div>
-                </div>
-              </div>
-            `).join('')}
+          <div class="modules-list" data-modules-container="non-enrolled">
           </div>
         </div>
       </div>

@@ -185,40 +185,78 @@ async function addUserDropdown(navTools) {
     const userName = user?.attributes?.name || 'User';
     const userAvatar = user?.attributes?.avatarUrl || '';
 
-    // Create user dropdown element
+    // Create user dropdown element using createElement
     const userDropdownDiv = document.createElement('div');
     userDropdownDiv.className = 'user-dropdown';
 
-    userDropdownDiv.innerHTML = `
-      <div class="user-dropdown-container">
-        <button class="user-profile-btn" aria-expanded="false" aria-haspopup="true">
-          <div class="user-avatar">
-            ${userAvatar ? 
-              `<img src="${userAvatar}" alt="${userName}" class="avatar-image">` : 
-              `<div class="avatar-placeholder">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <circle cx="16" cy="16" r="16" fill="#e0e0e0"/>
-                  <circle cx="16" cy="12" r="5" fill="#999"/>
-                  <path d="M8 26c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="#999"/>
-                </svg>
-              </div>`
-            }
-          </div>
-          <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div class="user-dropdown-menu" role="menu">
-          <a href="/profile" class="dropdown-item" role="menuitem">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            Your Profile
-          </a>
-        </div>
-      </div>
+    const container = document.createElement('div');
+    container.className = 'user-dropdown-container';
+
+    const profileBtn = document.createElement('button');
+    profileBtn.className = 'user-profile-btn';
+    profileBtn.setAttribute('aria-expanded', 'false');
+    profileBtn.setAttribute('aria-haspopup', 'true');
+
+    const userAvatarDiv = document.createElement('div');
+    userAvatarDiv.className = 'user-avatar';
+
+    if (userAvatar) {
+      const avatarImg = document.createElement('img');
+      avatarImg.src = userAvatar;
+      avatarImg.alt = userName;
+      avatarImg.className = 'avatar-image';
+      userAvatarDiv.appendChild(avatarImg);
+    } else {
+      const avatarPlaceholder = document.createElement('div');
+      avatarPlaceholder.className = 'avatar-placeholder';
+      avatarPlaceholder.innerHTML = `
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="16" fill="#e0e0e0"/>
+          <circle cx="16" cy="12" r="5" fill="#999"/>
+          <path d="M8 26c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="#999"/>
+        </svg>
+      `;
+      userAvatarDiv.appendChild(avatarPlaceholder);
+    }
+
+    const dropdownArrow = document.createElement('svg');
+    dropdownArrow.className = 'dropdown-arrow';
+    dropdownArrow.setAttribute('width', '12');
+    dropdownArrow.setAttribute('height', '12');
+    dropdownArrow.setAttribute('viewBox', '0 0 12 12');
+    dropdownArrow.setAttribute('fill', 'none');
+    dropdownArrow.innerHTML = '<path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+
+    profileBtn.appendChild(userAvatarDiv);
+    profileBtn.appendChild(dropdownArrow);
+
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'user-dropdown-menu';
+    dropdownMenu.setAttribute('role', 'menu');
+
+    const profileLink = document.createElement('a');
+    profileLink.href = '/profile';
+    profileLink.className = 'dropdown-item';
+    profileLink.setAttribute('role', 'menuitem');
+    
+    const profileIcon = document.createElement('svg');
+    profileIcon.setAttribute('width', '16');
+    profileIcon.setAttribute('height', '16');
+    profileIcon.setAttribute('viewBox', '0 0 16 16');
+    profileIcon.setAttribute('fill', 'none');
+    profileIcon.innerHTML = `
+      <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5"/>
     `;
+    
+    profileLink.appendChild(profileIcon);
+    profileLink.appendChild(document.createTextNode('Your Profile'));
+
+    dropdownMenu.appendChild(profileLink);
+
+    container.appendChild(profileBtn);
+    container.appendChild(dropdownMenu);
+    userDropdownDiv.appendChild(container);
 
     // Add to nav tools
     navTools.appendChild(userDropdownDiv);

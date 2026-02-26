@@ -13,6 +13,67 @@ import {
 import { createCourseOverviewHTML } from './html-generator.js';
 import { setupEventListeners, setupTabEventListeners } from './event-handlers.js';
 
+// Create a module item element using createElement
+function createModuleItem(module) {
+  const moduleItem = document.createElement('div');
+  moduleItem.className = `module-item ${module.statusClass || ''}`;
+  moduleItem.dataset.resourceId = module.id || module.resourceId;
+
+  const moduleIcon = document.createElement('div');
+  moduleIcon.className = 'module-icon';
+  moduleIcon.textContent = module.moduleIcon || module.icon;
+
+  const moduleContent = document.createElement('div');
+  moduleContent.className = 'module-content';
+
+  const moduleLeft = document.createElement('div');
+  moduleLeft.className = 'module-left';
+
+  const moduleHeader = document.createElement('div');
+  moduleHeader.className = 'module-header';
+
+  const moduleFormat = document.createElement('span');
+  moduleFormat.className = 'module-format';
+  moduleFormat.textContent = module.format || 'SELF PACED';
+
+  moduleHeader.appendChild(moduleFormat);
+
+  const moduleTitle = document.createElement('div');
+  moduleTitle.className = 'module-title';
+
+  const moduleName = document.createElement('h4');
+  moduleName.className = 'module-name';
+  moduleName.textContent = module.name || module.title;
+
+  moduleTitle.appendChild(moduleName);
+  moduleLeft.appendChild(moduleHeader);
+  moduleLeft.appendChild(moduleTitle);
+
+  const moduleMeta = document.createElement('div');
+  moduleMeta.className = 'module-meta';
+
+  const moduleDuration = document.createElement('span');
+  moduleDuration.className = 'module-duration';
+  moduleDuration.textContent = module.duration;
+
+  moduleMeta.appendChild(moduleDuration);
+
+  if (module.statusText) {
+    const moduleStatus = document.createElement('span');
+    moduleStatus.className = 'module-status';
+    moduleStatus.innerHTML = `${module.statusIcon} ${module.statusText}`;
+    moduleMeta.appendChild(moduleStatus);
+  }
+
+  moduleContent.appendChild(moduleLeft);
+  moduleContent.appendChild(moduleMeta);
+
+  moduleItem.appendChild(moduleIcon);
+  moduleItem.appendChild(moduleContent);
+
+  return moduleItem;
+}
+
 export default async function decorate(block) {
   try {
     console.log('=== COURSE OVERVIEW DECORATE FUNCTION STARTED ===');
@@ -108,6 +169,24 @@ export default async function decorate(block) {
     
     // Replace block content with new structure
     block.innerHTML = courseHTML;
+    
+    // Populate modules using createElement
+    const modulesContainer = block.querySelector('[data-modules-container]');
+    if (modulesContainer) {
+      const containerType = modulesContainer.dataset.modulesContainer;
+      
+      if (containerType === 'enrolled' && processedModules) {
+        processedModules.forEach(module => {
+          const moduleElement = createModuleItem(module);
+          modulesContainer.appendChild(moduleElement);
+        });
+      } else if (containerType === 'non-enrolled' && cdnData.modules) {
+        cdnData.modules.forEach(module => {
+          const moduleElement = createModuleItem(module);
+          modulesContainer.appendChild(moduleElement);
+        });
+      }
+    }
     
     // Setup all event listeners
     setupEventListeners(block, courseId, learnerData);

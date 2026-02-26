@@ -313,29 +313,89 @@ async function createCourseCard(item, includedData = []) {
   // Check if course has an image
   const hasImage = attributes.imageUrl && attributes.imageUrl.trim() !== '';
   
-  card.innerHTML = `
-    ${hasImage ? `<div class="card-image">
-      <img src="${attributes.imageUrl}" alt="${metadata.name}" loading="lazy" onerror="this.style.display='none'">
-      <div class="card-overlay">
-        <div class="card-type-badge">${attributes.loFormat || 'Self Paced'}</div>
-      </div>
-    </div>` : `<div class="card-header ${cardClass}">
-      <div class="card-type-badge">${attributes.loFormat || 'Self Paced'}</div>
-      <div class="card-icon">${icon}</div>
-    </div>`}
-    <div class="card-body">
-      <h4 class="card-title">${metadata.name}</h4>
-      <div class="card-type">${attributes.loType}</div>
-      <div class="card-footer">
-        <div class="card-skills">
-          <span>🎯</span>
-          <span>Skills: ${skillsText}</span>
-        </div>
-        ${status ? `<div class="card-status status-complete">${status}</div>` : ''}
-      </div>
-      <div class="card-duration">${duration}</div>
-    </div>
-  `;
+  // Create card structure using createElement
+  if (hasImage) {
+    const cardImage = document.createElement('div');
+    cardImage.className = 'card-image';
+    
+    const img = document.createElement('img');
+    img.src = attributes.imageUrl;
+    img.alt = metadata.name;
+    img.loading = 'lazy';
+    img.onerror = function() { this.style.display = 'none'; };
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'card-overlay';
+    
+    const typeBadge = document.createElement('div');
+    typeBadge.className = 'card-type-badge';
+    typeBadge.textContent = attributes.loFormat || 'Self Paced';
+    
+    overlay.appendChild(typeBadge);
+    cardImage.appendChild(img);
+    cardImage.appendChild(overlay);
+    card.appendChild(cardImage);
+  } else {
+    const cardHeader = document.createElement('div');
+    cardHeader.className = `card-header ${cardClass}`;
+    
+    const typeBadge = document.createElement('div');
+    typeBadge.className = 'card-type-badge';
+    typeBadge.textContent = attributes.loFormat || 'Self Paced';
+    
+    const cardIcon = document.createElement('div');
+    cardIcon.className = 'card-icon';
+    cardIcon.textContent = icon;
+    
+    cardHeader.appendChild(typeBadge);
+    cardHeader.appendChild(cardIcon);
+    card.appendChild(cardHeader);
+  }
+  
+  // Card body
+  const cardBody = document.createElement('div');
+  cardBody.className = 'card-body';
+  
+  const cardTitle = document.createElement('h4');
+  cardTitle.className = 'card-title';
+  cardTitle.textContent = metadata.name;
+  
+  const cardType = document.createElement('div');
+  cardType.className = 'card-type';
+  cardType.textContent = attributes.loType;
+  
+  const cardFooter = document.createElement('div');
+  cardFooter.className = 'card-footer';
+  
+  const cardSkills = document.createElement('div');
+  cardSkills.className = 'card-skills';
+  
+  const skillIcon = document.createElement('span');
+  skillIcon.textContent = '🎯';
+  
+  const skillText = document.createElement('span');
+  skillText.textContent = `Skills: ${skillsText}`;
+  
+  cardSkills.appendChild(skillIcon);
+  cardSkills.appendChild(skillText);
+  cardFooter.appendChild(cardSkills);
+  
+  if (status) {
+    const cardStatus = document.createElement('div');
+    cardStatus.className = 'card-status status-complete';
+    cardStatus.textContent = status;
+    cardFooter.appendChild(cardStatus);
+  }
+  
+  const cardDuration = document.createElement('div');
+  cardDuration.className = 'card-duration';
+  cardDuration.textContent = duration;
+  
+  cardBody.appendChild(cardTitle);
+  cardBody.appendChild(cardType);
+  cardBody.appendChild(cardFooter);
+  cardBody.appendChild(cardDuration);
+  card.appendChild(cardBody);
   
   // Add click handler
   card.addEventListener('click', () => {

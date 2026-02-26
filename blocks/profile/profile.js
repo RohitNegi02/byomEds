@@ -113,132 +113,239 @@ async function addSkillInterests(userId, skillIds) {
   }
 }
 
-// Generate profile HTML
+// Generate profile HTML using createElement
 function generateProfileHTML(userProfile, skillInterests) {
   const user = userProfile?.data;
   const userName = user?.attributes?.name || 'User Name';
   const userEmail = user?.attributes?.email || 'user@example.com';
   const userAvatar = user?.attributes?.avatarUrl || '';
 
+  const container = document.createElement('div');
+  container.className = 'profile-container';
+
+  // Profile Header
+  const profileHeader = document.createElement('div');
+  profileHeader.className = 'profile-header';
+  
+  const profileTitle = document.createElement('h1');
+  profileTitle.className = 'profile-title';
+  profileTitle.textContent = 'Your Profile';
+  profileHeader.appendChild(profileTitle);
+
+  // User Info Section
+  const userInfoSection = document.createElement('div');
+  userInfoSection.className = 'user-info-section';
+
+  const userAvatarDiv = document.createElement('div');
+  userAvatarDiv.className = 'user-avatar';
+
+  if (userAvatar) {
+    const avatarImg = document.createElement('img');
+    avatarImg.src = userAvatar;
+    avatarImg.alt = 'Profile Picture';
+    avatarImg.className = 'avatar-image';
+    userAvatarDiv.appendChild(avatarImg);
+  } else {
+    const avatarPlaceholder = document.createElement('div');
+    avatarPlaceholder.className = 'avatar-placeholder';
+    avatarPlaceholder.innerHTML = `
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="40" fill="#e0e0e0"/>
+        <circle cx="40" cy="30" r="12" fill="#999"/>
+        <path d="M20 65c0-11 9-20 20-20s20 9 20 20" fill="#999"/>
+      </svg>
+    `;
+    userAvatarDiv.appendChild(avatarPlaceholder);
+  }
+
+  const changeImageBtn = document.createElement('button');
+  changeImageBtn.className = 'change-image-btn';
+  changeImageBtn.textContent = 'Change image';
+  userAvatarDiv.appendChild(changeImageBtn);
+
+  const userDetails = document.createElement('div');
+  userDetails.className = 'user-details';
+
+  const userNameElem = document.createElement('h2');
+  userNameElem.className = 'user-name';
+  userNameElem.textContent = userName;
+
+  const userEmailElem = document.createElement('p');
+  userEmailElem.className = 'user-email';
+  userEmailElem.textContent = userEmail;
+
+  userDetails.appendChild(userNameElem);
+  userDetails.appendChild(userEmailElem);
+
+  userInfoSection.appendChild(userAvatarDiv);
+  userInfoSection.appendChild(userDetails);
+
+  // Skills Section
+  const skillsSection = document.createElement('div');
+  skillsSection.className = 'skills-section';
+
+  const sectionTitle = document.createElement('h2');
+  sectionTitle.className = 'section-title';
+  sectionTitle.textContent = 'Your Areas of Interest';
+
+  const sectionDescription = document.createElement('p');
+  sectionDescription.className = 'section-description';
+  sectionDescription.textContent = 'Select areas of interest. You will see recommendations based on your interest.';
+
+  const skillsGrid = document.createElement('div');
+  skillsGrid.className = 'skills-grid';
+
   // Process skill interests
-  let skillsHTML = '';
   if (skillInterests && skillInterests.data && skillInterests.data.length > 0) {
     const skills = skillInterests.data.map(interest => {
-      // Find the skill details from included data
       const skillId = interest.relationships?.skill?.data?.id;
       const skill = skillInterests.included?.find(item => 
         item.type === 'skill' && item.id === skillId
       );
       
       return {
-        id: interest.id, // Use the skill interest ID, not the skill ID
+        id: interest.id,
         skillId: skillId,
         name: skill?.attributes?.name || 'Unknown Skill'
       };
     });
 
-    skillsHTML = skills.map(skill => `
-      <div class="skill-interest-item" data-skill-id="${skill.id}">
-        <span class="skill-name">${skill.name}</span>
-        <button class="delete-skill-btn" title="Remove from My interests">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <div class="skill-tooltip">
-          <div class="tooltip-content">
-            <h4>${skill.name}</h4>
-            <p>Added based on your learnings</p>
-          </div>
-          <div class="tooltip-arrow"></div>
-        </div>
-      </div>
-    `).join('');
+    skills.forEach(skill => {
+      const skillItem = document.createElement('div');
+      skillItem.className = 'skill-interest-item';
+      skillItem.dataset.skillId = skill.id;
+
+      const skillName = document.createElement('span');
+      skillName.className = 'skill-name';
+      skillName.textContent = skill.name;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-skill-btn';
+      deleteBtn.title = 'Remove from My interests';
+      deleteBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      `;
+
+      const skillTooltip = document.createElement('div');
+      skillTooltip.className = 'skill-tooltip';
+      
+      const tooltipContent = document.createElement('div');
+      tooltipContent.className = 'tooltip-content';
+      
+      const tooltipTitle = document.createElement('h4');
+      tooltipTitle.textContent = skill.name;
+      
+      const tooltipText = document.createElement('p');
+      tooltipText.textContent = 'Added based on your learnings';
+      
+      tooltipContent.appendChild(tooltipTitle);
+      tooltipContent.appendChild(tooltipText);
+      
+      const tooltipArrow = document.createElement('div');
+      tooltipArrow.className = 'tooltip-arrow';
+      
+      skillTooltip.appendChild(tooltipContent);
+      skillTooltip.appendChild(tooltipArrow);
+
+      skillItem.appendChild(skillName);
+      skillItem.appendChild(deleteBtn);
+      skillItem.appendChild(skillTooltip);
+      
+      skillsGrid.appendChild(skillItem);
+    });
   } else {
-    skillsHTML = `
-      <div class="no-skills">
-        <p>No skill interests found. Add some interests to see personalized recommendations.</p>
-      </div>
-    `;
+    const noSkills = document.createElement('div');
+    noSkills.className = 'no-skills';
+    
+    const noSkillsText = document.createElement('p');
+    noSkillsText.textContent = 'No skill interests found. Add some interests to see personalized recommendations.';
+    noSkills.appendChild(noSkillsText);
+    
+    skillsGrid.appendChild(noSkills);
   }
 
-  return `
-    <div class="profile-container">
-      <!-- Profile Header -->
-      <div class="profile-header">
-        <h1 class="profile-title">Your Profile</h1>
-      </div>
+  const profileActions = document.createElement('div');
+  profileActions.className = 'profile-actions';
 
-      <!-- User Info Section -->
-      <div class="user-info-section">
-        <div class="user-avatar">
-          ${userAvatar ? 
-            `<img src="${userAvatar}" alt="Profile Picture" class="avatar-image">` : 
-            `<div class="avatar-placeholder">
-              <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <circle cx="40" cy="40" r="40" fill="#e0e0e0"/>
-                <circle cx="40" cy="30" r="12" fill="#999"/>
-                <path d="M20 65c0-11 9-20 20-20s20 9 20 20" fill="#999"/>
-              </svg>
-            </div>`
-          }
-          <button class="change-image-btn">Change image</button>
-        </div>
-        <div class="user-details">
-          <h2 class="user-name">${userName}</h2>
-          <p class="user-email">${userEmail}</p>
-        </div>
-      </div>
+  const modifyBtn = document.createElement('button');
+  modifyBtn.className = 'modify-interest-btn';
+  modifyBtn.textContent = 'Modify Interest';
+  profileActions.appendChild(modifyBtn);
 
-      <!-- Skills Section -->
-      <div class="skills-section">
-        <h2 class="section-title">Your Areas of Interest</h2>
-        <p class="section-description">
-          Select areas of interest. You will see recommendations based on your interest.
-        </p>
-        
-        <div class="skills-grid">
-          ${skillsHTML}
-        </div>
+  skillsSection.appendChild(sectionTitle);
+  skillsSection.appendChild(sectionDescription);
+  skillsSection.appendChild(skillsGrid);
+  skillsSection.appendChild(profileActions);
 
-        <div class="profile-actions">
-          <button class="modify-interest-btn">Modify Interest</button>
-        </div>
-      </div>
+  // Profile Footer
+  const profileFooter = document.createElement('div');
+  profileFooter.className = 'profile-footer';
 
-      <!-- Save Button -->
-      <div class="profile-footer">
-        <button class="save-changes-btn">Save Changes</button>
-      </div>
-    </div>
-  `;
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'save-changes-btn';
+  saveBtn.textContent = 'Save Changes';
+  profileFooter.appendChild(saveBtn);
+
+  // Assemble container
+  container.appendChild(profileHeader);
+  container.appendChild(userInfoSection);
+  container.appendChild(skillsSection);
+  container.appendChild(profileFooter);
+
+  return container;
 }
 
-// Generate skill selection HTML
+// Generate skill selection HTML using createElement
 function generateSkillSelectionHTML(availableSkills) {
-  const skillsHTML = availableSkills.map(skill => `
-    <div class="skill-selection-item" data-skill-id="${skill.id}">
-      <span class="skill-name">${skill.name}</span>
-    </div>
-  `).join('');
+  const container = document.createElement('div');
+  container.className = 'skill-selection-container';
 
-  return `
-    <div class="skill-selection-container">
-      <h2 class="section-title">Your Areas of Interest</h2>
-      <p class="section-description">
-        Select areas of interest. You will see recommendations based on your interest.
-      </p>
-      
-      <div class="skills-grid">
-        ${skillsHTML}
-      </div>
+  const sectionTitle = document.createElement('h2');
+  sectionTitle.className = 'section-title';
+  sectionTitle.textContent = 'Your Areas of Interest';
 
-      <div class="skill-selection-actions">
-        <button class="add-interest-btn">Add Interest</button>
-        <button class="cancel-selection-btn">Cancel</button>
-      </div>
-    </div>
-  `;
+  const sectionDescription = document.createElement('p');
+  sectionDescription.className = 'section-description';
+  sectionDescription.textContent = 'Select areas of interest. You will see recommendations based on your interest.';
+
+  const skillsGrid = document.createElement('div');
+  skillsGrid.className = 'skills-grid';
+
+  availableSkills.forEach(skill => {
+    const skillItem = document.createElement('div');
+    skillItem.className = 'skill-selection-item';
+    skillItem.dataset.skillId = skill.id;
+
+    const skillName = document.createElement('span');
+    skillName.className = 'skill-name';
+    skillName.textContent = skill.name;
+
+    skillItem.appendChild(skillName);
+    skillsGrid.appendChild(skillItem);
+  });
+
+  const skillSelectionActions = document.createElement('div');
+  skillSelectionActions.className = 'skill-selection-actions';
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-interest-btn';
+  addBtn.textContent = 'Add Interest';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cancel-selection-btn';
+  cancelBtn.textContent = 'Cancel';
+
+  skillSelectionActions.appendChild(addBtn);
+  skillSelectionActions.appendChild(cancelBtn);
+
+  container.appendChild(sectionTitle);
+  container.appendChild(sectionDescription);
+  container.appendChild(skillsGrid);
+  container.appendChild(skillSelectionActions);
+
+  return container;
 }
 
 // Handle modify interest button click
@@ -281,7 +388,8 @@ async function handleModifyInterest(block) {
 
     // Generate and display skill selection HTML
     const selectionHTML = generateSkillSelectionHTML(availableSkills);
-    skillsSection.innerHTML = selectionHTML;
+    skillsSection.innerHTML = '';
+    skillsSection.appendChild(selectionHTML);
 
     // Setup skill selection event listeners
     setupSkillSelectionListeners(skillsSection, block);
@@ -509,7 +617,8 @@ async function reloadProfileView(block) {
     
     // Regenerate the profile HTML
     const profileHTML = generateProfileHTML(userProfile, skillInterests);
-    block.innerHTML = profileHTML;
+    block.innerHTML = '';
+    block.appendChild(profileHTML);
     
     // Setup event listeners again
     setupProfileEventListeners(block);
@@ -599,7 +708,8 @@ export default async function decorate(block) {
 
     // Generate and display HTML
     const profileHTML = generateProfileHTML(userProfile, skillInterests);
-    block.innerHTML = profileHTML;
+    block.innerHTML = '';
+    block.appendChild(profileHTML);
 
     // Store user ID in block dataset for delete operations
     block.dataset.userId = userId;
