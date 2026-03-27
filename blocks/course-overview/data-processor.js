@@ -247,11 +247,246 @@ function filterModulesByType(processedModules, type) {
   }
 }
 
+// Process learning program data from API
+function processLearningProgramData(learnerData) {
+  if (!learnerData || !learnerData.data) {
+    return null;
+  }
+  
+  const lpData = learnerData.data;
+  const isLP = lpData.attributes.loType === 'learningProgram';
+  
+  if (!isLP) {
+    return null;
+  }
+  
+  // Check if user is enrolled in the LP
+  const lpEnrollment = lpData.relationships?.enrollment?.data;
+  const isLPEnrolled = !!lpEnrollment;
+  
+  let lpEnrollmentInfo = null;
+  if (isLPEnrolled && learnerData.included) {
+    const enrollmentData = learnerData.included.find(item => 
+      item.type === 'learningObjectInstanceEnrollment' && 
+      item.id === lpEnrollment.id
+    );
+    
+    if (enrollmentData) {
+      lpEnrollmentInfo = {
+        id: lpEnrollment.id,
+        progressPercent: enrollmentData.attributes?.progressPercent || 0,
+        isCompleted: enrollmentData.attributes?.progressPercent === 100,
+        hasStarted: enrollmentData.attributes?.progressPercent > 0
+      };
+    }
+  }
+  
+  // Extract subLOs (courses) from relationships
+  const subLOs = lpData.relationships?.subLOs?.data || [];
+  
+  // Get sections to determine which courses are required
+  const sections = lpData.attributes.sections || [];
+  const requiredCourseIds = new Set();
+  
+  sections.forEach(section => {
+    if (section.mandatory) {
+      section.loIds?.forEach(courseId => requiredCourseIds.add(courseId));
+    }
+  });
+  
+  // Extract course details from included array
+  const courses = subLOs.map(subLORef => {
+    const courseData = learnerData.included?.find(item => 
+      item.type === 'learningObject' && item.id === subLORef.id
+    );
+    
+    if (!courseData) return null;
+    
+    const courseAttrs = courseData.attributes;
+    const courseMeta = courseAttrs.localizedMetadata?.[0] || {};
+    
+    // Get enrollment data for this course if available
+    const courseEnrollment = courseData.relationships?.enrollment?.data;
+    let enrollmentInfo = null;
+    
+    if (courseEnrollment && learnerData.included) {
+      const enrollmentData = learnerData.included.find(item => 
+        item.type === 'learningObjectInstanceEnrollment' && 
+        item.id === courseEnrollment.id
+      );
+      
+      if (enrollmentData) {
+        enrollmentInfo = {
+          id: courseEnrollment.id,
+          progressPercent: enrollmentData.attributes?.progressPercent || 0,
+          isCompleted: enrollmentData.attributes?.progressPercent === 100,
+          hasStarted: enrollmentData.attributes?.progressPercent > 0,
+          dateCompleted: enrollmentData.attributes?.dateCompleted || null
+        };
+      }
+    }
+    
+    // Get instances for this course
+    const instances = courseData.relationships?.instances?.data || [];
+    const instanceResources = [];
+    
+    instances.forEach(instanceRef => {
+      const instance = learnerData.included?.find(item => 
+        item.type === 'learningObjectInstance' && item.id === instanceRef.id
+      );
+      
+      if (instance && instance.relationships?.loResources) {
+        instance.relationships.loResources.data.forEach(resourceRef => {
+          instanceResources.push(resourceRef);
+        });
+      }
+    });
+    
+    // Determine if this course is required based on sections
+    const isRequired = requiredCourseIds.has(courseData.id);
+    
+    return {
+      id: courseData.id,
+      name: courseMeta.name || 'Untitled Course',
+      overview: courseMeta.overview || '',
+      duration: courseAttrs.duration || 0,
+      imageUrl: courseAttrs.imageUrl || '',
+      state: courseAttrs.state || 'Published',
+      loFormat: courseAttrs.loFormat || 'Self Paced',
+      isRequired: isRequired,
+      enrollment: enrollmentInfo,
+      instanceResources: instanceResources,
+      // Store the full course ID and first instance ID for navigation
+      courseId: courseData.id.replace('course:', ''),
+      instanceId: instances[0]?.id.replace('course:', '').replace('_', '-') || null
+    };
+  }).filter(course => course !== null);
+  
+  return {
+    isLearningProgram: true,
+    lpId: lpData.id,
+    lpName: lpData.attributes.localizedMetadata?.[0]?.name || 'Learning Program',
+    lpDescription: lpData.attributes.localizedMetadata?.[0]?.description || '',
+    lpDuration: lpData.attributes.duration || 0,
+    lpFormat: lpData.attributes.loFormat || 'Self Paced',
+    isSubLoOrderEnforced: lpData.attributes.isSubLoOrderEnforced || false,
+    isEnrolled: isLPEnrolled,
+    enrollmentInfo: lpEnrollmentInfo,
+    sections: sections,
+    courses: courses
+  };
+}
+
+// Process modules for a specific course within an LP
+function processLPCourseModules(courseId, learnerData, resourceGrades) {
+  // Handle null/undefined learnerData
+  if (!learnerData || !learnerData.included) {
+    console.log('No learnerData or included array, returning empty modules');
+    return [];
+  }
+  
+  const courseData = learnerData.included.find(item => 
+    item.type === 'learningObject' && item.id === courseId
+  );
+  
+  if (!courseData) {
+    console.log('No courseData found for', courseId);
+    return [];
+  }
+  
+  // Get instances for this course
+  const instances = courseData.relationships?.instances?.data || [];
+  let moduleResources = [];
+  
+  instances.forEach(instanceRef => {
+    const instance = learnerData.included?.find(item => 
+      item.type === 'learningObjectInstance' && item.id === instanceRef.id
+    );
+    
+    if (instance && instance.relationships?.loResources) {
+      moduleResources = instance.relationships.loResources.data;
+    }
+  });
+  
+  return moduleResources.map((moduleRef, index) => {
+    const moduleResource = learnerData.included?.find(item => 
+      item.type === 'learningObjectResource' && item.id === moduleRef.id
+    );
+    
+    const resourceGrade = resourceGrades?.find(grade => 
+      grade.relationships?.loResource?.data?.id === moduleRef.id
+    );
+    
+    if (!moduleResource) return null;
+    
+    const moduleName = moduleResource.attributes.localizedMetadata?.[0]?.name || 'Module';
+    const isCompleted = resourceGrade ? resourceGrade.attributes.completed : false;
+    const hasStarted = resourceGrade && resourceGrade.attributes.progressPercent > 0;
+    
+    // Get resource details
+    const resource = moduleResource.relationships?.resources ? 
+      learnerData.included?.find(item => 
+        item.type === 'resource' && 
+        item.id === moduleResource.relationships.resources.data[0]?.id
+      ) : null;
+    
+    const duration = resource ? 
+      (resource.attributes.desiredDuration ? 
+        `${Math.floor(resource.attributes.desiredDuration / 60)} mins` : 
+        '0 mins') : 'N/A';
+    
+    const contentType = resource ? resource.attributes.contentType : 'Content';
+    const loResourceType = moduleResource.attributes.loResourceType;
+    
+    // Determine status
+    let statusText = '';
+    let statusIcon = '';
+    let statusClass = '';
+    
+    if (isCompleted) {
+      statusText = 'Completed';
+      statusIcon = '✓';
+      statusClass = 'completed';
+    } else if (hasStarted) {
+      statusText = 'In Progress';
+      statusIcon = '⏱️';
+      statusClass = 'in-progress';
+    }
+    
+    // Map content types to icons
+    let moduleIcon = '📖';
+    if (contentType === 'QUIZ') moduleIcon = '✓';
+    else if (contentType === 'PDF') moduleIcon = '📄';
+    else if (contentType === 'VIDEO') moduleIcon = '▶️';
+    else if (contentType === 'Activity') moduleIcon = '🔧';
+    
+    if (loResourceType === 'Test Out') {
+      moduleIcon = '✖️';
+    }
+    
+    return {
+      id: moduleRef.id,
+      name: moduleName,
+      duration,
+      contentType,
+      loResourceType,
+      statusText,
+      statusIcon,
+      statusClass,
+      moduleIcon,
+      isCompleted,
+      hasStarted
+    };
+  }).filter(module => module !== null);
+}
+
 // Export functions
 export {
   extractAuthorNames,
   extractSkillsData,
   extractEnrollmentData,
   processModuleData,
-  filterModulesByType
+  filterModulesByType,
+  processLearningProgramData,
+  processLPCourseModules
 };

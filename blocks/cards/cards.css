@@ -8,8 +8,8 @@
 }
 
 .cards > ul > li {
-  border: 1px solid #dadada;
-  background-color: var(--background-color);
+  border: 1px solid var(--theme-border, #dadada);
+  background-color: var(--theme-card-bg, var(--background-color));
 }
 
 .cards .cards-card-body {

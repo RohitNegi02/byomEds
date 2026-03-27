@@ -11,13 +11,13 @@
  */
 
 :root {
-  /* colors */
-  --background-color: white;
-  --light-color: #f8f8f8;
-  --dark-color: #505050;
-  --text-color: #131313;
-  --link-color: #3b63fb;
-  --link-hover-color: #1d3ecf;
+  /* colors - using theme variables */
+  --background-color: var(--theme-background, white);
+  --light-color: var(--theme-background-secondary, #f8f8f8);
+  --dark-color: var(--theme-text-tertiary, #505050);
+  --text-color: var(--theme-text-primary, #131313);
+  --link-color: var(--theme-link, #3b63fb);
+  --link-hover-color: var(--theme-link-hover, #1d3ecf);
 
   /* fonts */
   --body-font-family: roboto, roboto-fallback, sans-serif;
@@ -237,6 +237,7 @@ main img {
 /* sections */
 main > .section {
   margin: 40px 0;
+  background-color: var(--theme-background, white);
 }
 
 main > .section > div {
@@ -258,7 +259,7 @@ main > .section:first-of-type {
 /* section metadata */
 main .section.light,
 main .section.highlight {
-  background-color: var(--light-color);
+  background-color: var(--theme-background-secondary, var(--light-color));
   margin: 0;
   padding: 40px 0;
 }

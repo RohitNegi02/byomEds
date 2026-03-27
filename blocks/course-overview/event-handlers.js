@@ -15,18 +15,21 @@ async function handleEnrollmentAction(courseId) {
                       learnerData.data.relationships.enrollment;
     
     if (!isEnrolled) {
-      // Get the default instance ID from the course data
+      // Get the first instance ID from the course/LP data
       let instanceId = null;
       if (learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.instances) {
         const instances = learnerData.data.relationships.instances.data;
         if (instances && instances.length > 0) {
-          // Get the first (default) instance ID
+          // Get the first (default) instance ID - this will be the full ID like:
+          // "course:12495374_13216648" or "learningProgram:121645_174581"
           instanceId = instances[0].id;
+          console.log('Found instance ID from API data:', instanceId);
         }
       }
       
+      // If no instance found, enrollUser will construct a default one
       // Enroll the user
-      console.log('Enrolling user in course:', courseId, 'instance:', instanceId);
+      console.log('Enrolling user in:', courseId, 'instance:', instanceId);
       const enrollResult = await enrollUser(courseId, instanceId);
       
       if (enrollResult) {
@@ -381,12 +384,17 @@ async function handleTabSwitch(tabButton, courseId, courseTitle, learnerData, mo
         }
       }
       
-      // Last resort: construct from courseId if we have enrollment
-      if (!instanceId && courseId && learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.enrollment) {
-        // Extract the base course ID and try to construct instance ID
-        const baseCourseId = courseId.replace('course:', '');
-        instanceId = `course:${baseCourseId}_13216648`; // Using the expected format from the error
-        console.log('Constructed instanceId as fallback:', instanceId);
+      // Last resort: extract instance ID from enrollment ID
+      if (!instanceId && learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.enrollment) {
+        const enrollmentId = learnerData.data.relationships.enrollment.data.id;
+        // Enrollment ID format: course:courseId_instanceId_userId
+        // Extract the instance ID part
+        const parts = enrollmentId.split('_');
+        if (parts.length >= 2) {
+          // parts[0] is course:courseId, parts[1] is instanceId
+          instanceId = `${parts[0]}_${parts[1]}`;
+          console.log('Extracted instanceId from enrollmentId:', instanceId);
+        }
       }
       
       if (!instanceId) {

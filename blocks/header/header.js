@@ -1,6 +1,127 @@
 import { fetchPlaceholders, getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
 import { getAccessToken } from '../course-overview/api-service.js';
+import { almApiCall } from '../../scripts/alm-token.js';
+
+// Theme Switcher Constants
+const THEME_KEY = 'site-theme';
+const THEMES = ['light', 'dark', 'green'];
+
+// Theme Switcher Functions
+function getCurrentTheme() {
+  return localStorage.getItem(THEME_KEY) || 'light';
+}
+
+function setTheme(theme) {
+  if (!THEMES.includes(theme)) {
+    console.warn(`Invalid theme: ${theme}. Defaulting to light.`);
+    theme = 'light';
+  }
+
+  const root = document.documentElement;
+  root.removeAttribute('data-theme');
+  
+  if (theme !== 'light') {
+    root.setAttribute('data-theme', theme);
+  }
+  
+  localStorage.setItem(THEME_KEY, theme);
+  window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+}
+
+function addThemeSwitcher(navTools) {
+  const themeSwitcher = document.createElement('div');
+  themeSwitcher.className = 'theme-switcher';
+  
+  const button = document.createElement('button');
+  button.className = 'theme-switcher-btn';
+  button.setAttribute('aria-label', 'Switch theme');
+  button.setAttribute('aria-expanded', 'false');
+  button.setAttribute('type', 'button');
+  button.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  `;
+  
+  const menu = document.createElement('div');
+  menu.className = 'theme-switcher-menu';
+  
+  const currentTheme = getCurrentTheme();
+  
+  const themeNames = {
+    light: 'Light Theme',
+    dark: 'Dark Theme',
+    green: 'Green Theme'
+  };
+  
+  THEMES.forEach(theme => {
+    const item = document.createElement('button');
+    item.className = 'theme-option';
+    item.setAttribute('data-theme', theme);
+    item.setAttribute('type', 'button');
+    if (theme === currentTheme) {
+      item.classList.add('active');
+    }
+    
+    item.textContent = themeNames[theme] || theme;
+    item.addEventListener('click', () => {
+      setTheme(theme);
+      
+      menu.querySelectorAll('.theme-option').forEach(opt => {
+        opt.classList.remove('active');
+      });
+      item.classList.add('active');
+      
+      button.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('show');
+    });
+    
+    menu.appendChild(item);
+  });
+  
+  button.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', !isExpanded);
+    menu.classList.toggle('show');
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!themeSwitcher.contains(e.target)) {
+      button.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('show');
+    }
+  });
+  
+  themeSwitcher.appendChild(button);
+  themeSwitcher.appendChild(menu);
+  
+  // Insert before the first child of navTools to ensure it appears
+  if (navTools.firstChild) {
+    navTools.insertBefore(themeSwitcher, navTools.firstChild);
+  } else {
+    navTools.appendChild(themeSwitcher);
+  }
+}
+
+// Initialize theme on page load
+function initTheme() {
+  const currentTheme = getCurrentTheme();
+  setTheme(currentTheme);
+}
+
+// Initialize theme immediately
+initTheme();
 
 // media query match that indicates mobile/tablet width
 const isDesktop = window.matchMedia('(min-width: 900px)');
@@ -152,10 +273,9 @@ async function fetchUserProfileForHeader() {
       return null;
     }
 
-    const response = await fetch(`https://learningmanager.adobe.com/primeapi/v2/user`, {
+    const response = await almApiCall(`https://learningmanager.adobe.com/primeapi/v2/user`, {
       method: 'GET',
       headers: {
-        'Authorization': `oauth ${accessToken}`,
         'Content-Type': 'application/vnd.api+json'
       }
     });
@@ -379,6 +499,9 @@ export default async function decorate(block) {
     if (search && search.textContent === '') {
       search.setAttribute('aria-label', 'Search');
     }
+
+    // Add theme switcher
+    addThemeSwitcher(navTools);
 
     // Add user dropdown directly
     await addUserDropdown(navTools);

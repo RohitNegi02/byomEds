@@ -22,7 +22,7 @@
 .recommendation .recommendations-header h2 {
   font-size: 24px;
   font-weight: 400;
-  color: #2c2c2c;
+  color: var(--theme-text-primary, #2c2c2c);
   margin: 0;
   flex: 1;
   line-height: 1.3;
@@ -37,9 +37,9 @@
 .recommendation .nav-arrow {
   width: 48px;
   height: 48px;
-  border: 1px solid #d0d0d0;
+  border: 1px solid var(--theme-border, #d0d0d0);
   border-radius: 50%;
-  background: white;
+  background: var(--theme-card-bg, white);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -50,14 +50,14 @@
 }
 
 .recommendation .nav-arrow:hover {
-  background: #f5f5f5;
-  border-color: #999;
+  background: var(--theme-button-secondary-hover-bg, #f5f5f5);
+  border-color: var(--theme-border-hover, #999);
 }
 
 .recommendation .nav-arrow:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  background: white;
+  background: var(--theme-card-bg, white);
 }
 
 .recommendation .nav-arrow::before {
@@ -65,8 +65,8 @@
   display: block;
   width: 12px;
   height: 12px;
-  border-top: 2px solid #333;
-  border-right: 2px solid #333;
+  border-top: 2px solid var(--theme-text-primary, #333);
+  border-right: 2px solid var(--theme-text-primary, #333);
 }
 
 .recommendation .nav-arrow.prev::before {
@@ -102,14 +102,14 @@
 /* Card Styling */
 .recommendation .recommendation-card {
   flex: 0 0 380px; /* Fixed width for consistent scrolling */
-  background: #ffffff;
+  background: var(--theme-card-bg, #ffffff);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--theme-card-shadow, rgba(0, 0, 0, 0.1));
   transition: box-shadow 0.3s ease, transform 0.2s ease;
   display: flex;
   flex-direction: column;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--theme-card-border, #e8e8e8);
   height: auto;
 }
 
@@ -207,7 +207,7 @@
 .recommendation .card-title {
   font-size: 18px;
   font-weight: 600;
-  color: #2c2c2c;
+  color: var(--theme-text-primary, #2c2c2c);
   line-height: 1.4;
   margin: 0;
   flex: 1;
@@ -240,29 +240,29 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #6e6e6e;
+  color: var(--theme-text-tertiary, #6e6e6e);
   flex-wrap: wrap;
 }
 
 .recommendation .card-meta .separator {
-  color: #d4d4d4;
+  color: var(--theme-border, #d4d4d4);
   margin: 0 4px;
 }
 
 .recommendation .card-meta .date {
   font-weight: 500;
-  color: #2c2c2c;
+  color: var(--theme-text-primary, #2c2c2c);
 }
 
 .recommendation .card-meta .author,
 .recommendation .card-meta .duration {
-  color: #6e6e6e;
+  color: var(--theme-text-tertiary, #6e6e6e);
 }
 
 /* Label */
 .recommendation .card-label {
   font-size: 14px;
-  color: #6e6e6e;
+  color: var(--theme-text-tertiary, #6e6e6e);
   margin: 4px 0 12px 0;
 }
 
@@ -277,9 +277,9 @@
 .recommendation .action-button {
   flex: 1;
   padding: 12px 24px;
-  border: 2px solid #0D66D0;
-  background: #ffffff;
-  color: #0D66D0;
+  border: 2px solid var(--theme-button-primary-bg, #0D66D0);
+  background: var(--theme-card-bg, #ffffff);
+  color: var(--theme-button-primary-bg, #0D66D0);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -292,34 +292,34 @@
 }
 
 .recommendation .action-button:hover {
-  background: #0D66D0;
-  color: #ffffff;
+  background: var(--theme-button-primary-bg, #0D66D0);
+  color: var(--theme-button-primary-text, #ffffff);
 }
 
 .recommendation .more-options {
   width: 40px;
   height: 40px;
-  border: 1px solid #d4d4d4;
-  background: #ffffff;
+  border: 1px solid var(--theme-border, #d4d4d4);
+  background: var(--theme-card-bg, #ffffff);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #6e6e6e;
+  color: var(--theme-text-tertiary, #6e6e6e);
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .recommendation .more-options:hover {
-  background: #f5f5f5;
-  border-color: #b8b8b8;
+  background: var(--theme-button-secondary-hover-bg, #f5f5f5);
+  border-color: var(--theme-border-hover, #b8b8b8);
 }
 
 /* Go To Catalog card styles */
 .recommendation .recommendation-card-goto {
-  background: #f5f5f5;
+  background: var(--theme-background-secondary, #f5f5f5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -365,9 +365,9 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--theme-card-bg, white);
   border-radius: 0 0 8px 8px;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 -4px 16px var(--theme-dropdown-shadow, rgba(0, 0, 0, 0.15));
   z-index: 10;
   animation: slideUp 0.2s ease-out;
 }
@@ -395,19 +395,19 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #f5f5f5;
+  background: var(--theme-button-secondary-hover-bg, #f5f5f5);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: #333;
+  color: var(--theme-text-primary, #333);
   transition: background 0.2s ease;
 }
 
 .recommendation .bookmark-overlay-close:hover {
-  background: #e0e0e0;
+  background: var(--theme-border, #e0e0e0);
 }
 
 .recommendation .bookmark-button {
@@ -420,7 +420,7 @@
   align-items: center;
   gap: 12px;
   font-size: 16px;
-  color: #333;
+  color: var(--theme-text-primary, #333);
   transition: opacity 0.2s ease;
 }
 
@@ -442,7 +442,7 @@
 .recommendation .error-state {
   text-align: center;
   padding: 40px;
-  color: #707070;
+  color: var(--theme-text-tertiary, #707070);
   font-size: 16px;
 }
 
@@ -545,10 +545,10 @@
   display: block;
   margin: 40px auto 0;
   padding: 12px 32px;
-  background: white;
-  border: 2px solid #0D66D0;
+  background: var(--theme-card-bg, white);
+  border: 2px solid var(--theme-button-primary-bg, #0D66D0);
   border-radius: 24px;
-  color: #0D66D0;
+  color: var(--theme-button-primary-bg, #0D66D0);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -557,8 +557,8 @@
 }
 
 .recommendation .show-more-button:hover {
-  background: #0D66D0;
-  color: white;
+  background: var(--theme-button-primary-bg, #0D66D0);
+  color: var(--theme-button-primary-text, white);
 }
 
 /* Container expanded state */

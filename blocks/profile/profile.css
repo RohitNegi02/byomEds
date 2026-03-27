@@ -4,35 +4,36 @@
   margin: 0 auto;
   padding: 40px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8f9fa;
+  background-color: var(--theme-background-secondary, #f8f9fa);
   min-height: 100vh;
 }
 
 /* Profile Container */
 .profile-container {
-  background: white;
+  background: var(--theme-card-bg, white);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--theme-card-shadow, rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--theme-card-border, transparent);
   overflow: hidden;
 }
 
 /* Profile Header */
 .profile-header {
   padding: 40px 40px 20px 40px;
-  background: white;
+  background: var(--theme-card-bg, white);
 }
 
 .profile-title {
   font-size: 2rem;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text-primary, #333);
   margin: 0;
 }
 
 /* User Info Section */
 .user-info-section {
   padding: 20px 40px 40px 40px;
-  background: #f8f9fa;
+  background: var(--theme-background-secondary, #f8f9fa);
   display: flex;
   align-items: flex-start;
   gap: 24px;
@@ -59,12 +60,12 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: #e0e0e0;
+  background: var(--theme-border, #e0e0e0);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 4px solid var(--theme-card-bg, white);
+  box-shadow: 0 2px 8px var(--theme-card-shadow, rgba(0, 0, 0, 0.1));
 }
 
 .user-details {
@@ -75,13 +76,13 @@
 .user-name {
   font-size: 1.75rem;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text-primary, #333);
   margin: 0 0 8px 0;
 }
 
 .user-email {
   font-size: 1rem;
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   margin: 0;
 }
 
@@ -104,20 +105,20 @@
 /* Skills Section */
 .skills-section {
   padding: 40px;
-  background: white;
-  border-top: 1px solid #e0e0e0;
+  background: var(--theme-card-bg, white);
+  border-top: 1px solid var(--theme-border, #e0e0e0);
 }
 
 .section-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text-primary, #333);
   margin: 0 0 16px 0;
 }
 
 .section-description {
   font-size: 1rem;
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   margin: 0 0 32px 0;
   line-height: 1.5;
 }
@@ -131,8 +132,8 @@
 }
 
 .skill-interest-item {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-background-secondary, #f8f9fa);
+  border: 1px solid var(--theme-border, #e0e0e0);
   border-radius: 8px;
   padding: 24px;
   text-align: center;
@@ -142,8 +143,8 @@
 }
 
 .skill-interest-item:hover {
-  background: #f0f0f0;
-  border-color: #d0d0d0;
+  background: var(--theme-hover-bg, #f0f0f0);
+  border-color: var(--theme-border-hover, #d0d0d0);
 }
 
 .skill-interest-item:hover .delete-skill-btn {
@@ -154,7 +155,7 @@
 .skill-name {
   font-size: 1rem;
   font-weight: 500;
-  color: #333;
+  color: var(--theme-text-primary, #333);
 }
 
 /* Delete Skill Button */
@@ -294,8 +295,8 @@
 }
 
 .modify-interest-btn {
-  background: #4f46e5;
-  color: white;
+  background: var(--theme-button-primary-bg, #4f46e5);
+  color: var(--theme-button-primary-text, white);
   border: none;
   padding: 12px 24px;
   border-radius: 6px;
@@ -306,21 +307,21 @@
 }
 
 .modify-interest-btn:hover {
-  background: #4338ca;
+  background: var(--theme-button-primary-hover, #4338ca);
 }
 
 /* Profile Footer */
 .profile-footer {
   padding: 40px;
-  background: white;
-  border-top: 1px solid #e0e0e0;
+  background: var(--theme-card-bg, white);
+  border-top: 1px solid var(--theme-border, #e0e0e0);
   display: flex;
   justify-content: flex-end;
 }
 
 .save-changes-btn {
-  background: #4f46e5;
-  color: white;
+  background: var(--theme-button-primary-bg, #4f46e5);
+  color: var(--theme-button-primary-text, white);
   border: none;
   padding: 14px 28px;
   border-radius: 6px;
@@ -331,7 +332,7 @@
 }
 
 .save-changes-btn:hover {
-  background: #4338ca;
+  background: var(--theme-button-primary-hover, #4338ca);
 }
 
 /* Loading and Error States */
@@ -339,7 +340,7 @@
   text-align: center;
   padding: 60px 20px;
   font-size: 1.1rem;
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
 }
 
 .error {
@@ -439,8 +440,8 @@
 
 /* Skill Selection Styles */
 .skill-selection-item {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-background-secondary, #f8f9fa);
+  border: 1px solid var(--theme-border, #e0e0e0);
   border-radius: 8px;
   padding: 24px;
   text-align: center;
@@ -450,8 +451,8 @@
 }
 
 .skill-selection-item:hover {
-  background: #f0f0f0;
-  border-color: #d0d0d0;
+  background: var(--theme-hover-bg, #f0f0f0);
+  border-color: var(--theme-border-hover, #d0d0d0);
 }
 
 .skill-selection-item.selected {
@@ -474,8 +475,8 @@
 }
 
 .add-interest-btn {
-  background: #4f46e5;
-  color: white;
+  background: var(--theme-button-primary-bg, #4f46e5);
+  color: var(--theme-button-primary-text, white);
   border: none;
   padding: 12px 24px;
   border-radius: 6px;
@@ -486,7 +487,7 @@
 }
 
 .add-interest-btn:hover:not(:disabled) {
-  background: #4338ca;
+  background: var(--theme-button-primary-hover, #4338ca);
 }
 
 .add-interest-btn:disabled {
@@ -496,8 +497,8 @@
 
 .cancel-selection-btn {
   background: transparent;
-  color: #4f46e5;
-  border: 2px solid #4f46e5;
+  color: var(--theme-button-primary-bg, #4f46e5);
+  border: 2px solid var(--theme-button-primary-bg, #4f46e5);
   padding: 10px 24px;
   border-radius: 6px;
   font-size: 0.875rem;
@@ -507,8 +508,8 @@
 }
 
 .cancel-selection-btn:hover {
-  background: #4f46e5;
-  color: white;
+  background: var(--theme-button-primary-bg, #4f46e5);
+  color: var(--theme-button-primary-text, white);
 }
 
 /* Animation for skill items */

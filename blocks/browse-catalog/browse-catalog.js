@@ -195,43 +195,86 @@ async function fetchCatalogs() {
 // Cache for skill names to avoid repeated API calls
 const skillCache = new Map();
 
-// Get skill names for a learning object
-async function getSkillNames(item) {
+// Get skill names synchronously from cache (for immediate rendering)
+function getSkillNamesSync(item) {
   if (!item.relationships || !item.relationships.skills || !item.relationships.skills.data) {
     return ['General'];
   }
 
-  const skillPromises = item.relationships.skills.data.map(async (skillRef) => {
-    // Extract skill ID from the learningObjectSkill ID
-    // Format is usually "course:id_skillId" or similar
+  const skillNames = [];
+  
+  item.relationships.skills.data.forEach((skillRef) => {
     const skillIdMatch = skillRef.id.match(/_(\d+)$/);
-    if (!skillIdMatch) return 'General';
-    
-    const skillId = skillIdMatch[1];
-    
-    // Check cache first
-    if (skillCache.has(skillId)) {
-      return skillCache.get(skillId);
+    if (skillIdMatch) {
+      const skillId = skillIdMatch[1];
+      if (skillCache.has(skillId)) {
+        skillNames.push(skillCache.get(skillId));
+      }
     }
-
-    // Fetch skill details
-    const skillData = await fetchSkillDetails(skillId);
-    if (skillData && skillData.attributes && skillData.attributes.name) {
-      const skillName = skillData.attributes.name;
-      skillCache.set(skillId, skillName);
-      return skillName;
-    }
-    
-    return 'General';
   });
 
-  try {
-    const skillNames = await Promise.all(skillPromises);
-    return skillNames.filter(name => name !== 'General').slice(0, 2); // Show max 2 skills
-  } catch (error) {
-    console.error('Error getting skill names:', error);
-    return ['General'];
+  return skillNames.length > 0 ? skillNames.slice(0, 2) : ['General'];
+}
+
+// Load skills progressively with controlled concurrency
+async function loadSkillsProgressively(courses) {
+  const allSkillIds = new Set();
+  
+  // Collect all unique skill IDs
+  courses.forEach(course => {
+    if (course.relationships?.skills?.data) {
+      course.relationships.skills.data.forEach(skillRef => {
+        const skillIdMatch = skillRef.id.match(/_(\d+)$/);
+        if (skillIdMatch) {
+          allSkillIds.add(skillIdMatch[1]);
+        }
+      });
+    }
+  });
+  
+  const skillIds = Array.from(allSkillIds);
+  const CONCURRENT_LIMIT = 3; // Max 3 concurrent requests to avoid rate limiting
+  
+  // Process skills in batches
+  for (let i = 0; i < skillIds.length; i += CONCURRENT_LIMIT) {
+    const batch = skillIds.slice(i, i + CONCURRENT_LIMIT);
+    
+    // Fetch batch concurrently (only if not in cache)
+    await Promise.all(
+      batch.map(async (skillId) => {
+        if (!skillCache.has(skillId)) {
+          try {
+            const skillData = await fetchSkillDetails(skillId);
+            if (skillData && skillData.attributes && skillData.attributes.name) {
+              skillCache.set(skillId, skillData.attributes.name);
+            }
+          } catch (error) {
+            console.error(`Error fetching skill ${skillId}:`, error);
+          }
+        }
+      })
+    );
+    
+    // Update cards with newly loaded skills
+    updateCardsWithSkills(courses);
   }
+}
+
+// Update all course cards with loaded skill names
+function updateCardsWithSkills(courses) {
+  courses.forEach(course => {
+    const courseId = course.id;
+    const card = document.querySelector(`[data-course-id="${courseId}"]`);
+    
+    if (card) {
+      const skillsElement = card.querySelector('.card-skills span:last-child');
+      if (skillsElement) {
+        const skillNames = getSkillNamesSync(course);
+        const skillsText = skillNames.length > 0 ? skillNames.join(', ') : 'General';
+        skillsElement.textContent = `Skills: ${skillsText}`;
+      }
+    }
+  });
 }
 
 function formatDuration(seconds) {
@@ -275,7 +318,7 @@ function getEnrollmentStatus(item) {
   return '';
 }
 
-async function createCourseCard(item, includedData = []) {
+function createCourseCard(item, includedData = []) {
   let attributes = item.attributes;
   
   // Handle search API response structure
@@ -302,8 +345,8 @@ async function createCourseCard(item, includedData = []) {
   const duration = formatDuration(attributes.duration);
   const status = getEnrollmentStatus(item);
   
-  // Get actual skill names
-  const skillNames = await getSkillNames(item);
+  // Get skill names synchronously from cache (will show "General" initially if not cached)
+  const skillNames = getSkillNamesSync(item);
   const skillsText = skillNames.length > 0 ? skillNames.join(', ') : 'General';
   
   const card = document.createElement('div');
@@ -399,21 +442,41 @@ async function createCourseCard(item, includedData = []) {
   
   // Add click handler
   card.addEventListener('click', () => {
-    console.log('Course clicked:', item.id);
+    console.log('Learning object clicked:', item.id, 'Type:', attributes.loType);
     
-    // Extract numeric IDs from the course ID format (e.g., "course:12495374")
-    const courseId = item.id.replace('course:', '');
-    let instanceId = courseId;
+    let trainingId;
+    let instanceId;
     
-    // Try to get the first instance ID from the course data
-    if (item.relationships && item.relationships.instances && item.relationships.instances.data && item.relationships.instances.data.length > 0) {
-      const fullInstanceId = item.relationships.instances.data[0].id;
-      // Extract numeric part and format as courseId-instanceId (e.g., "7235190-7875851")
-      instanceId = fullInstanceId.replace('course:', '').replace('_', '-');
+    // Check if this is a learning program
+    if (attributes.loType === 'learningProgram') {
+      // Extract numeric ID from learningProgram:163767 format
+      const lpNumericId = item.id.replace('learningProgram:', '');
+      trainingId = `lp-${lpNumericId}`;
+      instanceId = lpNumericId;
+      
+      // Try to get the first instance ID from the LP data
+      if (item.relationships && item.relationships.instances && item.relationships.instances.data && item.relationships.instances.data.length > 0) {
+        const fullInstanceId = item.relationships.instances.data[0].id;
+        // Extract numeric part and format as lpId-instanceId
+        instanceId = fullInstanceId.replace('learningProgram:', '').replace('_', '-');
+      }
+    } else {
+      // Regular course handling
+      trainingId = item.id.replace('course:', '');
+      instanceId = trainingId;
+      
+      // Try to get the first instance ID from the course data
+      if (item.relationships && item.relationships.instances && item.relationships.instances.data && item.relationships.instances.data.length > 0) {
+        const fullInstanceId = item.relationships.instances.data[0].id;
+        // Extract numeric part and format as courseId-instanceId (e.g., "7235190-7875851")
+        instanceId = fullInstanceId.replace('course:', '').replace('_', '-');
+      }
     }
     
     // Construct the overview URL with proper path format
-    const overviewUrl = `/overview/trainingId/${courseId}/trainingInstanceId/${instanceId}`;
+    const overviewUrl = `/overview/trainingId/${trainingId}/trainingInstanceId/${instanceId}`;
+    
+    console.log('Navigating to:', overviewUrl);
     
     // Navigate to the overview page
     window.location.href = overviewUrl;
@@ -639,12 +702,15 @@ export default async function decorate(block) {
       return;
     }
     
-    // Create cards with skill names loaded asynchronously
-    const cardPromises = filteredCourses.map(course => createCourseCard(course, includedData));
-    const cards = await Promise.all(cardPromises);
-    
-    cards.forEach(card => {
+    // STEP 1: Render cards immediately (synchronous - no API calls)
+    filteredCourses.forEach(course => {
+      const card = createCourseCard(course, includedData);
       courseGrid.appendChild(card);
+    });
+    
+    // STEP 2: Load skills progressively in background (non-blocking)
+    loadSkillsProgressively(filteredCourses).catch(error => {
+      console.error('Error loading skills:', error);
     });
   }
   

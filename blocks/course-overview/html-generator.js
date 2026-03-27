@@ -68,6 +68,10 @@ function createModuleItem(module) {
 function generateEnrolledHTML(data, courseId, learnerData, authorNames, skillsHtml, enrollmentInfo, processedModules, testoutModules = [], hasNotes = false) {
   const { progressPercent, completedModules, moduleResources } = enrollmentInfo;
   
+  // Determine button text based on progress
+  const hasProgress = progressPercent > 0;
+  const buttonText = hasProgress ? 'Continue' : 'Start';
+  
   // Determine which tabs to show
   const hasTestoutModules = testoutModules && testoutModules.length > 0;
   
@@ -127,7 +131,7 @@ function generateEnrolledHTML(data, courseId, learnerData, authorNames, skillsHt
       <!-- Learner Sidebar -->
       <div class="learner-sidebar enrolled-sidebar">
         <div class="sidebar-actions">
-          <button class="start-btn">Start</button>
+          <button class="start-btn">${buttonText}</button>
           <button class="save-btn">🔖 Save</button>
         </div>
         
@@ -280,8 +284,204 @@ function generateNonEnrolledHTML(data, courseId, authorNames) {
   `;
 }
 
+// Generate Learning Program HTML layout
+function generateLearningProgramHTML(data, lpData, lpId, learnerData, authorNames, skillsHtml, enrollmentInfo) {
+  const { progressPercent } = enrollmentInfo;
+  const lpDuration = formatDuration(lpData.lpDuration);
+  
+  // Determine button text based on progress
+  const hasProgress = progressPercent > 0;
+  const buttonText = hasProgress ? 'Continue' : 'Start';
+  
+  return `
+    <!-- Learning Program Header with Progress -->
+    <div class="course-header enrolled-header lp-header">
+      <div class="course-header-content">
+        <h1 class="course-title">${data.courseTitle}</h1>
+        <div class="course-format">${data.courseFormat}</div>
+        ${enrollmentInfo.isEnrolled ? `
+        <div class="progress-section">
+          <span class="progress-label">Progress:</span>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+          </div>
+          <span class="progress-text">${progressPercent}%</span>
+        </div>
+        ` : ''}
+      </div>
+      <button class="share-btn">🔗 Share</button>
+    </div>
+    
+    <!-- Duration Display (No course description for LP) -->
+    <div class="course-overview-section lp-duration-section">
+      <p class="lp-duration-display">⏱️ Duration: ${lpDuration}</p>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="course-main-content lp-layout">
+      <!-- Left Content -->
+      <div class="course-left-content">
+        <!-- Course Cards -->
+        ${lpData.courses.map((course, index) => {
+          // Parse metadata if available (format: "Self Paced ● P Rahul, Neelansh ● 1h ● ★★★☆☆ 3")
+          let courseAuthor = authorNames || 'Unknown Author';
+          let courseDurationText = formatDuration(course.duration);
+          let courseRating = null; // No default rating
+          
+          if (course.metadata) {
+            const parts = course.metadata.split('●').map(p => p.trim());
+            // parts[0] = format, parts[1] = author, parts[2] = duration, parts[3] = rating
+            if (parts.length >= 2) {
+              courseAuthor = parts[1]; // Author name
+            }
+            if (parts.length >= 3) {
+              courseDurationText = parts[2]; // Duration
+            }
+            if (parts.length >= 4) {
+              // Extract rating value from format like "★★★☆☆ 3"
+              const ratingText = parts[3];
+              const ratingMatch = ratingText.match(/(\d+)/); // Extract number
+              if (ratingMatch) {
+                const ratingValue = parseInt(ratingMatch[1]);
+                courseRating = `⭐ ${ratingValue}/5`; // Format: ⭐ 3/5
+              }
+            }
+          }
+          
+          // Determine if course is required
+          // Priority 1: Check CDN data isRequired flag (from metadata)
+          // Priority 2: Check API sections data
+          let isRequired = false;
+          
+          if (course.isRequired !== undefined) {
+            // Use CDN parsed value
+            isRequired = course.isRequired;
+          } else if (lpData.sections && lpData.sections.length > 0) {
+            // Fallback to API sections data
+            for (const section of lpData.sections) {
+              if (section.loIds && section.loIds.includes(course.id)) {
+                isRequired = section.mandatory === true;
+                break;
+              }
+            }
+          }
+          
+          // Required badge HTML - only show if course is required
+          const requiredBadgeHtml = isRequired ? '<span class="course-required-badge">Required</span>' : '';
+          
+          // Completed badge HTML - show if course is completed
+          const isCompleted = course.enrollment?.isCompleted === true;
+          const completedBadgeHtml = isCompleted ? '<span class="course-completed-badge">✓ Completed</span>' : '';
+          
+          return `
+          <div class="lp-course-card ${isCompleted ? 'completed' : ''}" data-course-id="${course.id}">
+            <!-- Course Metadata Bar -->
+            <div class="course-metadata-bar">
+              <span class="course-type">Course</span>
+              <span class="course-author">${courseAuthor}</span>
+              <span class="course-duration-meta">Duration: ${courseDurationText}</span>
+              ${requiredBadgeHtml}
+              ${courseRating ? `<span class="course-rating">${courseRating}</span>` : ''}
+              ${completedBadgeHtml}
+            </div>
+            
+            <!-- Course Header -->
+            <div class="course-card-header">
+              <img src="${course.imageUrl || course.metadata || 'https://via.placeholder.com/120x80'}" alt="${course.name}" class="course-thumbnail" onerror="this.src='https://via.placeholder.com/120x80'">
+              <div class="course-card-info">
+                <h3 class="course-card-title">${course.name}</h3>
+                <p class="course-card-description">${course.overview || 'No description available'}</p>
+              </div>
+              <button class="course-card-expand-btn" data-course-id="${course.id}">
+                <span class="expand-icon">▼</span>
+              </button>
+            </div>
+            
+            <!-- Expandable Module Section -->
+            <div class="course-card-modules" data-course-modules="${course.id}" style="display: none;">
+              <div class="course-tabs">
+                <button class="tab-button active">Curriculum</button>
+                <button class="tab-button">Testout</button>
+              </div>
+              <div class="modules-loading">Loading modules...</div>
+            </div>
+          </div>
+        `;
+        }).join('')}
+      </div>
+      
+      <!-- Learner Sidebar -->
+      <div class="learner-sidebar lp-sidebar">
+        ${enrollmentInfo.isEnrolled ? `
+        <div class="sidebar-actions">
+          <button class="start-btn">${buttonText}</button>
+          <button class="save-btn">🔖 Save</button>
+        </div>
+        
+        <!-- Rating Section -->
+        <div class="sidebar-section">
+          <div class="rating-section">
+            <h4>Rate this Learning Path</h4>
+            <div class="star-rating">
+              ${Array.from({length: 5}, (_, i) => {
+                const starIndex = i + 1;
+                const isSelected = starIndex <= enrollmentInfo.currentRating;
+                return `<span class="star" data-rating="${starIndex}">${isSelected ? '⭐' : '☆'}</span>`;
+              }).join('')}
+              <button class="submit-rating">Submit</button>
+            </div>
+          </div>
+        </div>
+        ` : `
+        <div class="sidebar-actions">
+          <button class="enroll-btn" data-course-id="${lpId}">Enroll</button>
+          <button class="save-btn disabled">🔖 Save</button>
+        </div>
+        `}
+        
+        <div class="sidebar-section">
+          <div class="progress-info">
+            <h4>📋 Completion status</h4>
+            <p>Complete</p>
+            <p>${lpData.courses.filter(c => c.enrollment?.isCompleted).length} out of ${lpData.courses.length} Courses/Paths</p>
+          </div>
+        </div>
+        
+        ${skillsHtml ? `
+        <div class="sidebar-section">
+          <div class="skills-covered">
+            <h4>✈️ Skills covered</h4>
+            <div class="skills-list">
+              <p>${skillsHtml}</p>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+        
+        ${authorNames ? `
+        <div class="sidebar-section">
+          <div class="author-info">
+            <h4>Author(s)</h4>
+            <div class="author-item">
+              <div class="author-avatar">👤</div>
+              <span class="author-name">${authorNames}</span>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
 // Main HTML generation function
-function createCourseOverviewHTML(data, courseId, learnerData, authorNames, skillsHtml, enrollmentInfo, processedModules, testoutModules = [], hasNotes = false) {
+function createCourseOverviewHTML(data, courseId, learnerData, authorNames, skillsHtml, enrollmentInfo, processedModules, testoutModules = [], hasNotes = false, lpData = null) {
+  // Check if this is a learning program
+  if (data.isLearningProgram && lpData) {
+    return generateLearningProgramHTML(data, lpData, courseId, learnerData, authorNames, skillsHtml, enrollmentInfo);
+  }
+  
+  // Regular course handling
   if (enrollmentInfo.isEnrolled) {
     return generateEnrolledHTML(data, courseId, learnerData, authorNames, skillsHtml, enrollmentInfo, processedModules, testoutModules, hasNotes);
   } else {

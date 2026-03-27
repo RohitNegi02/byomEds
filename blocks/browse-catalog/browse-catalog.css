@@ -1,6 +1,6 @@
 .browse-catalog {
   padding: 40px 0;
-  background-color: #f8f9fa;
+  background-color: var(--theme-background-secondary, #f8f9fa);
 }
 
 .browse-catalog .catalog-header {
@@ -26,20 +26,24 @@
 
 .browse-catalog .search-input {
   padding: 10px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border, #ddd);
   border-radius: 5px;
   font-size: 16px;
   width: 300px;
+  background-color: var(--theme-input-bg, white);
+  color: var(--theme-input-text, #333);
 }
 
 .browse-catalog .filters-toggle {
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border, #ddd);
   padding: 10px 15px;
   border-radius: 5px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
+  background-color: var(--theme-card-bg, white);
+  color: var(--theme-text-secondary, #333);
 }
 
 .browse-catalog .catalog-content {
@@ -52,11 +56,12 @@
 
 .browse-catalog .catalog-sidebar {
   width: 280px;
-  background: white;
+  background: var(--theme-sidebar-bg, white);
   border-radius: 8px;
   padding: 20px;
   height: fit-content;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--theme-card-shadow, rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--theme-sidebar-border, transparent);
 }
 
 .browse-catalog .sidebar-section {
@@ -89,7 +94,7 @@
 
 .browse-catalog .filter-item label {
   font-size: 14px;
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   cursor: pointer;
 }
 
@@ -142,10 +147,11 @@
 }
 
 .browse-catalog .course-card {
-  background: white;
+  background: var(--theme-card-bg, white);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px var(--theme-card-shadow, rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--theme-card-border, transparent);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
 }
@@ -268,7 +274,7 @@
 
 .browse-catalog .card-type {
   font-size: 14px;
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   margin-bottom: 12px;
   text-transform: capitalize;
 }
@@ -285,7 +291,7 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
 }
 
 .browse-catalog .card-status {
@@ -312,7 +318,7 @@
 
 .browse-catalog .card-duration {
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   margin-top: 8px;
 }
 
@@ -343,7 +349,7 @@
 }
 
 .browse-catalog .loading-text {
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   font-style: italic;
 }
 

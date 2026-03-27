@@ -1,7 +1,7 @@
 // API Service for Course Overview
 // Handles all API calls and data fetching
 
-import { getAlmAccessToken } from '../../scripts/alm-token.js';
+import { getAlmAccessToken, almApiCall } from '../../scripts/alm-token.js';
 
 // Cache access token to avoid repeated sessionStorage calls
 let cachedAccessToken = null;
@@ -34,9 +34,8 @@ async function fetchLearnerCourseData(courseId) {
 
     const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}?${params.toString()}`;
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: API_CONFIG.getHeaders()
+    const response = await almApiCall(url, {
+      method: 'GET'
     });
 
     if (!response.ok) {
@@ -51,7 +50,7 @@ async function fetchLearnerCourseData(courseId) {
   }
 }
 
-// Enroll user in course
+// Enroll user in course or learning program
 async function enrollUser(courseId, instanceId) {
   try {
     const accessToken = getAccessToken();
@@ -60,19 +59,32 @@ async function enrollUser(courseId, instanceId) {
       return null;
     }
 
-    // Build the full instance ID format (e.g., "course:12495374_13216648")
-    const loInstanceId = instanceId || `${courseId}_default`;
+    // Determine if this is a Learning Program or Course
+    const isLP = courseId.startsWith('learningProgram:');
+    
+    // For Learning Programs, get the first instance from the LP
+    let loInstanceId = instanceId;
+    
+    if (!loInstanceId) {
+      if (isLP) {
+        // For LP without instanceId, extract numeric ID and construct default instance
+        const lpNumericId = courseId.replace('learningProgram:', '');
+        loInstanceId = `learningProgram:${lpNumericId}_default`;
+      } else {
+        // For courses without instanceId
+        loInstanceId = `${courseId}_default`;
+      }
+    }
     
     // Use query parameters as per API specification
     const url = `${API_CONFIG.baseUrl}/enrollments?loId=${courseId}&loInstanceId=${loInstanceId}&omitDeprecated=true&access_token=${accessToken}`;
     
     console.log('Enroll API URL:', url);
-    console.log('Enroll parameters:', { loId: courseId, loInstanceId });
+    console.log('Enroll parameters:', { loId: courseId, loInstanceId, isLP });
     
-    const response = await fetch(url, {
+    const response = await almApiCall(url, {
       method: 'POST',
       headers: {
-        'Accept': 'application/vnd.api+json',
         'Content-Type': 'application/vnd.api+json'
       }
     });
@@ -101,9 +113,8 @@ async function unenrollUser(enrollmentId) {
     console.log('Unenroll API URL:', url);
     console.log('Unenroll enrollmentId:', enrollmentId);
     
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: API_CONFIG.getHeaders()
+    const response = await almApiCall(url, {
+      method: 'DELETE'
     });
 
     if (!response.ok) {
@@ -124,9 +135,8 @@ async function bookmarkCourse(courseId) {
   try {
     const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}/bookmark`;
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: API_CONFIG.getHeaders()
+    const response = await almApiCall(url, {
+      method: 'POST'
     });
 
     if (!response.ok) {
@@ -157,10 +167,9 @@ async function rateCourse(enrollmentId, rating) {
     
     console.log('Rating request payload:', JSON.stringify(payload, null, 2));
     
-    const response = await fetch(url, {
+    const response = await almApiCall(url, {
       method: 'PATCH',
       headers: {
-        ...API_CONFIG.getHeaders(),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
@@ -188,9 +197,8 @@ async function fetchCourseNotes(courseId, instanceId) {
     
     console.log('Fetching notes from URL:', url);
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: API_CONFIG.getHeaders()
+    const response = await almApiCall(url, {
+      method: 'GET'
     });
 
     if (!response.ok) {

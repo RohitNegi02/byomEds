@@ -1,5 +1,6 @@
 // User Dropdown Block - Displays user profile dropdown in header
 import { getAccessToken } from '../course-overview/api-service.js';
+import { almApiCall } from '../../scripts/alm-token.js';
 
 // Fetch user profile for dropdown
 async function fetchUserProfile() {
@@ -9,10 +10,9 @@ async function fetchUserProfile() {
       return null;
     }
 
-    const response = await fetch(`https://learningmanager.adobe.com/primeapi/v2/user`, {
+    const response = await almApiCall(`https://learningmanager.adobe.com/primeapi/v2/user`, {
       method: 'GET',
       headers: {
-        'Authorization': `oauth ${accessToken}`,
         'Content-Type': 'application/vnd.api+json'
       }
     });

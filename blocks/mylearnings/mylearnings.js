@@ -171,7 +171,7 @@ function createGoToMyLearningCard() {
 
   // Card link wrapper
   const link = document.createElement('a');
-  link.href = '/my-learning'; // Update this URL as needed
+  link.href = '/mylearning'; // Update this URL as needed
   link.className = 'mylearning-goto-link';
 
   // Card body (no image for this card)

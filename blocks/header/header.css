@@ -1,6 +1,6 @@
 /* header and nav layout */
 header .nav-wrapper {
-  background-color: var(--background-color);
+  background-color: var(--theme-header-bg, var(--background-color));
   width: 100%;
   z-index: 2;
   position: fixed;
@@ -69,7 +69,7 @@ header nav .nav-hamburger button {
   border: 0;
   border-radius: 0;
   padding: 0;
-  background-color: var(--background-color);
+  background-color: var(--theme-header-bg, var(--background-color));
   color: inherit;
   overflow: initial;
   text-overflow: initial;
@@ -243,7 +243,7 @@ header nav .nav-sections ul > li > ul > li {
     width: 200px;
     top: 150%;
     padding: 16px;
-    background-color: var(--light-color);
+    background-color: var(--theme-nav-dropdown-bg, var(--light-color));
     white-space: initial;
     z-index: 1;
   }
@@ -257,7 +257,7 @@ header nav .nav-sections ul > li > ul > li {
     height: 0;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
-    border-bottom: 8px solid var(--light-color);
+    border-bottom: 8px solid var(--theme-nav-dropdown-bg, var(--light-color));
   }
 
   header nav .nav-sections .default-content-wrapper > ul > li > ul > li {
@@ -271,6 +271,108 @@ header nav .nav-tools {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+/* Theme Switcher */
+header nav .nav-tools .theme-switcher {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+header nav .nav-tools .theme-switcher-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 8px;
+  transition: background-color 0.2s;
+  color: var(--theme-text-secondary, #333);
+  margin: 0;
+}
+
+header nav .nav-tools .theme-switcher-btn:hover {
+  background: var(--theme-hover-bg-light, rgba(0, 0, 0, 0.05));
+}
+
+header nav .nav-tools .theme-switcher-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+header nav .nav-tools .theme-switcher-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--theme-dropdown-bg, white);
+  border: 1px solid var(--theme-dropdown-border, #e0e0e0);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--theme-dropdown-shadow, rgba(0, 0, 0, 0.15));
+  min-width: 160px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+  z-index: 1000;
+  overflow: hidden;
+  display: none;
+}
+
+header nav .nav-tools .theme-switcher-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  display: block;
+}
+
+header nav .nav-tools .theme-option {
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--theme-text-secondary, #333);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+  margin: 0;
+  border-radius: 0;
+}
+
+header nav .nav-tools .theme-option:hover {
+  background: var(--theme-dropdown-hover, #f8f9fa);
+}
+
+header nav .nav-tools .theme-option.active {
+  background: var(--theme-hover-bg, #f8f9fa);
+  font-weight: 500;
+}
+
+header nav .nav-tools .theme-option.active::before {
+  content: '✓';
+  position: absolute;
+  left: -4px;
+  color: var(--theme-primary, #4f46e5);
+  font-weight: bold;
+}
+
+@media (max-width: 900px) {
+  header nav .nav-tools .theme-switcher-menu {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  
+  header nav .nav-tools .theme-switcher-menu.show {
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 header nav .nav-tools .button {
@@ -305,7 +407,7 @@ header nav .nav-tools .user-dropdown .user-profile-btn {
 }
 
 header nav .nav-tools .user-dropdown .user-profile-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--theme-hover-bg-light, rgba(0, 0, 0, 0.05));
 }
 
 header nav .nav-tools .user-dropdown .user-avatar {
@@ -331,12 +433,12 @@ header nav .nav-tools .user-dropdown .user-avatar .avatar-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #666;
+  background: var(--theme-avatar-bg, #666);
   border-radius: 50%;
 }
 
 header nav .nav-tools .user-dropdown .dropdown-arrow {
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   transition: transform 0.2s;
   width: 12px;
   height: 12px;
@@ -351,10 +453,10 @@ header nav .nav-tools .user-dropdown .user-dropdown-menu {
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-dropdown-bg, white);
+  border: 1px solid var(--theme-dropdown-border, #e0e0e0);
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px var(--theme-dropdown-shadow, rgba(0, 0, 0, 0.15));
   min-width: 140px;
   opacity: 0;
   visibility: hidden;
@@ -380,7 +482,7 @@ header nav .nav-tools .user-dropdown .user-dropdown-menu::before {
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-bottom: 6px solid white;
+  border-bottom: 6px solid var(--theme-dropdown-bg, white);
 }
 
 header nav .nav-tools .user-dropdown .user-dropdown-menu::after {
@@ -392,7 +494,7 @@ header nav .nav-tools .user-dropdown .user-dropdown-menu::after {
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-bottom: 6px solid #e0e0e0;
+  border-bottom: 6px solid var(--theme-dropdown-border, #e0e0e0);
 }
 
 header nav .nav-tools .user-dropdown .dropdown-item {
@@ -400,7 +502,7 @@ header nav .nav-tools .user-dropdown .dropdown-item {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  color: #333;
+  color: var(--theme-text-secondary, #333);
   text-decoration: none;
   transition: background-color 0.2s;
   font-size: 0.875rem;
@@ -409,19 +511,19 @@ header nav .nav-tools .user-dropdown .dropdown-item {
 }
 
 header nav .nav-tools .user-dropdown .dropdown-item:hover {
-  background: #f8f9fa;
-  color: #333;
+  background: var(--theme-dropdown-hover, #f8f9fa);
+  color: var(--theme-text-secondary, #333);
 }
 
 header nav .nav-tools .user-dropdown .dropdown-item svg {
-  color: #666;
+  color: var(--theme-text-tertiary, #666);
   flex-shrink: 0;
   width: 14px;
   height: 14px;
 }
 
 header nav .nav-tools .user-dropdown .dropdown-item:hover svg {
-  color: #4f46e5;
+  color: var(--theme-primary, #4f46e5);
 }
 
 /* breadcrumbs */
