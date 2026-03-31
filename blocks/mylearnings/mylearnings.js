@@ -2,6 +2,7 @@ import { createOptimizedPicture } from '../../scripts/aem.js';
 import { createFluidicPlayerModal } from '../course-overview/ui-components.js';
 import { getAlmAccessToken } from '../../scripts/alm-token.js';
 
+const i18n = window.alm.i18n;
 /**
  * Converts duration in seconds to minutes format
  * @param {number} seconds - Duration in seconds
@@ -59,7 +60,10 @@ function findSkillName(included, skillId) {
  */
 function transformLearningObjectToCard(learningObject, included) {
   const { attributes, relationships } = learningObject;
-  const metadata = attributes.localizedMetadata?.[0] || {};
+  const currentLocale = i18n?.currentLocale;
+  const metadata = (currentLocale && attributes.localizedMetadata?.find((m) => m.locale === currentLocale))
+    || attributes.localizedMetadata?.[0]
+    || {};
 
   // Get enrollment data
   const enrollmentId = relationships.enrollment?.data?.id;
@@ -107,7 +111,7 @@ function transformLearningObjectToCard(learningObject, included) {
     category: category || attributes.loType || 'Course',
     date: formattedDate,
     duration: formatDuration(attributes.duration),
-    progressText: `${progressPercent}% completed`,
+    progressText: `${progressPercent}% ${i18n.translations['alm.mylearning.completed']}`,
     progress: `${progressPercent}%`,
     badge: badge,
     image: {
@@ -181,7 +185,7 @@ function createGoToMyLearningCard() {
   // Title
   const title = document.createElement('h3');
   title.className = 'mylearning-card-title mylearning-goto-title';
-  title.textContent = 'Go to My Learning';
+  title.textContent = i18n.translations['alm.gotomylearning'] || 'Go to My Learning';
   bodyDiv.appendChild(title);
 
   link.appendChild(bodyDiv);
@@ -295,7 +299,7 @@ function createCard(cardData) {
   // Continue button
   const continueBtn = document.createElement('button');
   continueBtn.className = 'mylearning-continue-btn';
-  continueBtn.textContent = 'CONTINUE';
+  continueBtn.textContent = i18n.translations['alm.mylearning.continue'];
   continueBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -366,7 +370,7 @@ export default async function decorate(block) {
   header.className = 'mylearning-header';
 
   const title = document.createElement('h2');
-  title.textContent = 'My Learning List';
+  title.textContent = i18n?.translations['alm.mylearning.heading'] || 'My Learning';
   header.appendChild(title);
 
   const navigation = document.createElement('div');
