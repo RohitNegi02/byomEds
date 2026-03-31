@@ -2,6 +2,7 @@ import { createOptimizedPicture } from '../../scripts/aem.js';
 import { createFluidicPlayerModal } from '../course-overview/ui-components.js';
 import { getAlmAccessToken } from '../../scripts/alm-token.js';
 
+const i18n = window.alm.i18n;
 /**
  * Fetch enrollment state for a learning object
  * @param {string} learningObjectId - Learning object ID
@@ -61,7 +62,7 @@ async function fetchEnrollmentState(learningObjectId, instanceId) {
  */
 function getButtonText(enrollmentState) {
   if (!enrollmentState || enrollmentState.state === 'NOT_ENROLLED') {
-    return 'START';
+    return i18n.translations['alm.button.start'];
   }
 
   if (enrollmentState.state === 'COMPLETED') {
@@ -72,7 +73,7 @@ function getButtonText(enrollmentState) {
     return 'CONTINUE';
   }
 
-  return 'START';
+  return i18n.translations['alm.button.start'];
 }
 
 /**
@@ -149,10 +150,13 @@ function parseApiResponse(apiResponse) {
     if (!learningObject) return;
 
     const { attributes } = learningObject;
-    const localizedMetadata = attributes.localizedMetadata?.[0] || {};
+    const currentLocale = i18n?.currentLocale;
+    const localizedMetadata = (currentLocale && attributes.localizedMetadata?.find((m) => m.locale === currentLocale))
+      || attributes.localizedMetadata?.[0]
+      || {};
 
     // Extract reason (label)
-    const reason = recommendation.attributes?.reason?.[0] || 'Suggested for you';
+    const reason = i18n.translations['alm.recommendation.suggestedforyou'] || 'Suggested for you';
 
     // Get instance ID from relationships
     const instanceId = learningObject.relationships?.instances?.data?.[0]?.id || '';
@@ -161,7 +165,7 @@ function parseApiResponse(apiResponse) {
 
     // Determine button text based on enrollment status or other logic
     // For now, using "EXPLORE" if no duration, "START" otherwise
-    const buttonText = attributes.duration === 0 ? 'EXPLORE' : 'START';
+    const buttonText = attributes.duration === 0 ? i18n.translations['alm.button.explore'] : i18n.translations['alm.button.start'];
 
     // Get rating badge
     const rating = attributes.rating?.averageRating || 0;
@@ -268,7 +272,7 @@ function createGoToCatalogCard() {
   // Title
   const title = document.createElement('h3');
   title.className = 'recommendation-goto-title';
-  title.textContent = 'Go To Catalog';
+  title.textContent = i18n.translations['alm.recommendation.gotocatalog'];
   bodyDiv.appendChild(title);
 
   link.appendChild(bodyDiv);
@@ -607,7 +611,7 @@ function showBookmarkOverlay(card, learningObjectId, isBookmarked) {
 
   const bookmarkText = document.createElement('span');
   bookmarkText.className = 'bookmark-text';
-  bookmarkText.textContent = isBookmarked ? 'Unsave' : 'Save';
+  bookmarkText.textContent = isBookmarked ? i18n.translations['alm.button.unsave'] : i18n.translations['alm.button.save'];
 
   bookmarkButton.appendChild(bookmarkIcon);
   bookmarkButton.appendChild(bookmarkText);
@@ -645,7 +649,7 @@ function showBookmarkOverlay(card, learningObjectId, isBookmarked) {
       newIcon.innerHTML = '🔖';
       const newText = document.createElement('span');
       newText.className = 'bookmark-text';
-      newText.textContent = isBookmarked ? 'Unsave' : 'Save';
+      newText.textContent = isBookmarked ? i18n.translations['alm.button.unsave'] : i18n.translations['alm.button.save'];
       bookmarkButton.appendChild(newIcon);
       bookmarkButton.appendChild(newText);
       bookmarkButton.disabled = false;
@@ -921,7 +925,7 @@ function createRecommendationCard(cardData, refreshCallback) {
     const playerUrl = `https://learningmanager.adobe.com/app/player?lo_id=${learningObjectId}&access_token=${accessToken}&hostname=https://learningmanager.adobe.com&trapfocus=true`;
 
     // Launch fluidic player modal with refresh callback
-      createFluidicPlayerModal(playerUrl, async () => {
+    createFluidicPlayerModal(playerUrl, async () => {
       console.log('Fluidic player closed, updating card state and rating...');
 
       // Update both button state and rating after player closes
@@ -985,7 +989,7 @@ function createSkillSection(skillGroup, isFirst = false) {
   header.className = 'recommendations-header';
 
   const title = document.createElement('h2');
-  title.textContent = `Recommended based on your areas of interest - ${skillName}`;
+  title.textContent = `${i18n.translations['alm.recommendation.heading']} - ${skillName}`;
   header.appendChild(title);
 
   const navigationArrows = document.createElement('div');
@@ -1143,8 +1147,8 @@ export default async function decorate(block) {
   // Clear the block
   block.innerHTML = '';
 
-  if (!firstValidStrip || !firstValidStrip.skillGroup) {
-    block.innerHTML = '<div class="error-state">No recommendations available at this time.</div>';
+  if (!firstValidStrip?.skillGroup) {
+    block.innerHTML = `<div class="error-state">${i18n.translations['alm.norecommendation']}</div>`;
     return;
   }
 
@@ -1163,12 +1167,12 @@ export default async function decorate(block) {
   if (remainingStripsCount > 0) {
     const showMoreButton = document.createElement('button');
     showMoreButton.className = 'show-more-button';
-    showMoreButton.textContent = 'Show more';
+    showMoreButton.textContent = i18n.translations['alm.recommendation.showmore'];
 
     showMoreButton.addEventListener('click', async () => {
       // Disable button and show loading state
       showMoreButton.disabled = true;
-      showMoreButton.textContent = 'Loading...';
+      showMoreButton.textContent = i18n.translations['alm.recommendation.loading'] + '...';
 
       // Fetch remaining strips (all strips after the first valid one)
       const stripPromises = [];
