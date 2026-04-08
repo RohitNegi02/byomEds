@@ -1,13 +1,15 @@
 // UI Components for Course Overview
 // Handles HTML generation and UI component creation
 
+const { i18n } = window.alm;
+
 // Format duration helper
 function formatDuration(seconds) {
-  if (!seconds || seconds === 0) return 'Self-paced';
-  
+  if (!seconds || seconds === 0) return i18n.translations['alm.overview.selfpacedduration'] || 'Self-paced';
+
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   }
@@ -26,26 +28,25 @@ function getCourseIdFromUrl() {
 
 // Extract data from CDN HTML
 function extractDataFromCDN(block) {
-  const courseTitle = document.querySelector('meta[name="course-title"]')?.content || 'Course Title';
-  const courseFormat = block.querySelector('p')?.textContent || 'Blended';
-  const courseDescription = document.querySelector('meta[name="richTextOverview"]')?.content || 
-                           document.querySelector('meta[name="description"]')?.content || 
-                           'Course description';
-  
+  const courseTitle = document.querySelector('meta[name="course-title"]')?.content || (i18n.translations['alm.overview.coursetitle'] || 'Course Title');
+  const courseFormat = block.querySelector('p')?.textContent || (i18n.translations['alm.overview.blended'] || 'Blended');
+  const courseDescription = document.querySelector('meta[name="richTextOverview"]')?.content
+                           || document.querySelector('meta[name="description"]')?.content
+                           || (i18n.translations['alm.overview.coursedescription'] || 'Course description');
+
   // Extract modules from the basic HTML structure
   const modules = [];
   const h4Elements = block.querySelectorAll('h4');
-  
+
   h4Elements.forEach((h4, index) => {
     const moduleTitle = h4.textContent;
-    const moduleId = h4.id;
-    
+
     // Find the next elements after h4 to get duration and format
     let nextElement = h4.nextElementSibling;
     let duration = 'N/A';
     let format = 'SELF PACED';
     let icon = '📖';
-    
+
     // Look for duration in the next few elements
     while (nextElement && nextElement.tagName === 'P') {
       const text = nextElement.textContent.trim();
@@ -54,24 +55,24 @@ function extractDataFromCDN(block) {
         break;
       } else if (text === 'SELF PACED') {
         format = text;
-      } else if (text.match(/^[📄▶️🔧✓]$/)) {
+      } else if (text.match(/^[📄🔧✓]$/u) || text === '▶️') {
         icon = text;
       }
       nextElement = nextElement.nextElementSibling;
     }
-    
+
     modules.push({
       id: `module-${index}`,
       resourceId: `course:14401139_15111973_${19943287 + index}_0`,
       title: moduleTitle,
-      duration: duration,
-      format: format,
-      icon: icon
+      duration,
+      format,
+      icon,
     });
   });
-  
+
   // Extract skills
-  const skillsSection = Array.from(block.querySelectorAll('h3')).find(h3 => h3.textContent.includes('Skills covered'));
+  const skillsSection = Array.from(block.querySelectorAll('h3')).find((h3) => h3.textContent.includes('Skills covered'));
   const skills = [];
   if (skillsSection) {
     let nextElement = skillsSection.nextElementSibling;
@@ -80,13 +81,40 @@ function extractDataFromCDN(block) {
       nextElement = nextElement.nextElementSibling;
     }
   }
-  
+
   return {
     courseTitle,
     courseFormat,
     courseDescription,
     modules,
-    skills
+    skills,
+  };
+}
+
+// Enrich CDN data with locale-aware API localizedMetadata
+function enrichWithLocalizedMetadata(cdnData, learnerData) {
+  if (!learnerData || !learnerData.data
+    || !learnerData.data.attributes) {
+    return cdnData;
+  }
+
+  const { currentLocale } = i18n;
+  const { attributes } = learnerData.data;
+  const locMeta = (currentLocale
+    && attributes.localizedMetadata?.find(
+      (m) => m.locale === currentLocale,
+    ))
+    || attributes.localizedMetadata?.[0];
+
+  if (!locMeta) return cdnData;
+
+  return {
+    ...cdnData,
+    courseTitle: locMeta.name || cdnData.courseTitle,
+    courseDescription: locMeta.richTextOverview
+      || locMeta.overview
+      || locMeta.description
+      || cdnData.courseDescription,
   };
 }
 
@@ -147,7 +175,7 @@ function createFluidicPlayerModal(playerUrl, onCloseCallback) {
   });
 
   // Listen for messages from the iframe to close modal
-  window.addEventListener('message', function closePlayer(event) {
+  window.addEventListener('message', (event) => {
     if (event.data === 'status:close') {
       // Handle closing event from Adobe Learning Manager player
       closeModal();
@@ -167,5 +195,6 @@ export {
   formatDuration,
   getCourseIdFromUrl,
   extractDataFromCDN,
-  createFluidicPlayerModal
+  enrichWithLocalizedMetadata,
+  createFluidicPlayerModal,
 };

@@ -20,7 +20,7 @@ function detectCurrentLocale() {
 }
 
 async function fetchTranslations(locale) {
-  const response = await fetch(`/i18n/translations/${locale.toLowerCase()}.json`);
+  const response = await fetch(`/i18n/translation/${locale.toLowerCase()}.json`);
   if (!response.ok) {
     throw new Error(`Failed to fetch translations for ${locale}: ${response.status} ${response.statusText}`);
   }

@@ -1,12 +1,14 @@
 import { getAlmAccessToken } from '../../scripts/alm-token.js';
 
+const { i18n } = window.alm;
+
 // API Configuration
 const API_CONFIG = {
   baseUrl: 'https://learningmanager.adobe.com/primeapi/v2',
   headers: {
-    'Accept': 'application/vnd.api+json',
-    'Authorization': `oauth ${getAlmAccessToken()}`
-  }
+    Accept: 'application/vnd.api+json',
+    Authorization: `oauth ${getAlmAccessToken()}`,
+  },
 };
 
 // Search API function
@@ -14,14 +16,14 @@ async function searchLearningObjects(searchTerm, limit = 9, cursor = null) {
   try {
     const params = new URLSearchParams({
       'filter.loTypes': 'course,learningProgram,certification,jobAid',
-      'sort': 'relevance',
+      sort: 'relevance',
       'page[limit]': limit,
-      'include': 'model.instances.loResources.resources,model.instances.badge,model.supplementaryResources,model.enrollment.loResourceGrades,model.skills.skillLevel.skill',
+      include: 'model.instances.loResources.resources,model.instances.badge,model.supplementaryResources,model.enrollment.loResourceGrades,model.skills.skillLevel.skill',
       'filter.ignoreEnhancedLP': 'false',
       'enforcedFields[learningObject]': 'extensionOverrides',
-      'query': searchTerm,
-      'snippetType': 'courseName,courseOverview,courseDescription,moduleName,certificationName,certificationOverview,certificationDescription,jobAidName,jobAidDescription,lpName,lpDescription,lpOverview,embedLpName,embedLpDesc,embedLpOverview,skillName,skillDescription,note,badgeName,courseTag,moduleTag,jobAidTag,lpTag,certificationTag,embedLpTag,discussion',
-      'language': 'en-US'
+      query: searchTerm,
+      snippetType: 'courseName,courseOverview,courseDescription,moduleName,certificationName,certificationOverview,certificationDescription,jobAidName,jobAidDescription,lpName,lpDescription,lpOverview,embedLpName,embedLpDesc,embedLpOverview,skillName,skillDescription,note,badgeName,courseTag,moduleTag,jobAidTag,lpTag,certificationTag,embedLpTag,discussion',
+      language: i18n.currentLocale || 'en-US',
     });
 
     if (cursor) {
@@ -29,10 +31,10 @@ async function searchLearningObjects(searchTerm, limit = 9, cursor = null) {
     }
 
     const url = `${API_CONFIG.baseUrl}/search?${params.toString()}`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: API_CONFIG.headers
+      headers: API_CONFIG.headers,
     });
 
     if (!response.ok) {
@@ -51,10 +53,10 @@ async function searchLearningObjects(searchTerm, limit = 9, cursor = null) {
 async function fetchLearningObjects(limit = 9, searchTerm = '', filters = {}, cursor = null) {
   try {
     const params = new URLSearchParams({
-      'include': 'instances.loResources.resources,instances.badge,supplementaryResources,enrollment.loResourceGrades,skills.skillLevel.skill,instances.loResources.resources.room',
+      include: 'instances.loResources.resources,instances.badge,supplementaryResources,enrollment.loResourceGrades,skills.skillLevel.skill,instances.loResources.resources.room',
       'page[limit]': limit,
-      'sort': '-date',
-      'filter.ignoreEnhancedLP': 'false'
+      sort: '-date',
+      'filter.ignoreEnhancedLP': 'false',
     });
 
     // Add cursor for pagination if provided
@@ -85,10 +87,10 @@ async function fetchLearningObjects(limit = 9, searchTerm = '', filters = {}, cu
     }
 
     const url = `${API_CONFIG.baseUrl}/learningObjects?${params.toString()}`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: API_CONFIG.headers
+      headers: API_CONFIG.headers,
     });
 
     if (!response.ok) {
@@ -108,10 +110,10 @@ async function fetchLearningObjects(limit = 9, searchTerm = '', filters = {}, cu
 async function fetchSkillDetails(skillId) {
   try {
     const url = `${API_CONFIG.baseUrl}/skills/${skillId}`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: API_CONFIG.headers
+      headers: API_CONFIG.headers,
     });
 
     if (!response.ok) {
@@ -130,10 +132,10 @@ async function fetchSkillDetails(skillId) {
 async function fetchTags() {
   try {
     const url = `${API_CONFIG.baseUrl}/data?filter.tagName=true`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: API_CONFIG.headers
+      headers: API_CONFIG.headers,
     });
 
     if (!response.ok) {
@@ -152,10 +154,10 @@ async function fetchTags() {
 async function fetchSkills() {
   try {
     const url = `${API_CONFIG.baseUrl}/data?filter.skillName=true`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: API_CONFIG.headers
+      headers: API_CONFIG.headers,
     });
 
     if (!response.ok) {
@@ -174,10 +176,10 @@ async function fetchSkills() {
 async function fetchCatalogs() {
   try {
     const url = `${API_CONFIG.baseUrl}/catalogs`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: API_CONFIG.headers
+      headers: API_CONFIG.headers,
     });
 
     if (!response.ok) {
@@ -198,17 +200,17 @@ const skillCache = new Map();
 // Get skill names for a learning object
 async function getSkillNames(item) {
   if (!item.relationships || !item.relationships.skills || !item.relationships.skills.data) {
-    return ['General'];
+    return [i18n.translations['alm.catalog.general'] || 'General'];
   }
 
   const skillPromises = item.relationships.skills.data.map(async (skillRef) => {
     // Extract skill ID from the learningObjectSkill ID
     // Format is usually "course:id_skillId" or similar
     const skillIdMatch = skillRef.id.match(/_(\d+)$/);
-    if (!skillIdMatch) return 'General';
-    
+    if (!skillIdMatch) return i18n.translations['alm.catalog.general'] || 'General';
+
     const skillId = skillIdMatch[1];
-    
+
     // Check cache first
     if (skillCache.has(skillId)) {
       return skillCache.get(skillId);
@@ -221,25 +223,26 @@ async function getSkillNames(item) {
       skillCache.set(skillId, skillName);
       return skillName;
     }
-    
-    return 'General';
+
+    return i18n.translations['alm.catalog.general'] || 'General';
   });
 
   try {
+    const generalLabel = i18n.translations['alm.catalog.general'] || 'General';
     const skillNames = await Promise.all(skillPromises);
-    return skillNames.filter(name => name !== 'General').slice(0, 2); // Show max 2 skills
+    return skillNames.filter((name) => name !== generalLabel).slice(0, 2); // Show max 2 skills
   } catch (error) {
     console.error('Error getting skill names:', error);
-    return ['General'];
+    return [i18n.translations['alm.catalog.general'] || 'General'];
   }
 }
 
 function formatDuration(seconds) {
-  if (!seconds || seconds === 0) return 'Self-paced';
-  
+  if (!seconds || seconds === 0) return i18n.translations['alm.catalog.selfpaced'] || 'Self-paced';
+
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   }
@@ -250,11 +253,11 @@ function getCardIcon(loFormat, loType) {
   const icons = {
     'Self Paced': '📚',
     'Virtual Classroom': '🎓',
-    'certification': '🏆',
-    'learningProgram': '📋',
-    'jobAid': '🔧'
+    certification: '🏆',
+    learningProgram: '📋',
+    jobAid: '🔧',
   };
-  
+
   return icons[loFormat] || icons[loType] || '📖';
 }
 
@@ -262,75 +265,80 @@ function getCardClass(loFormat) {
   const formatMap = {
     'Self Paced': 'self-paced',
     'Virtual Classroom': 'virtual-classroom',
-    'Blended': 'self-paced'
+    Blended: 'self-paced',
   };
-  
+
   return formatMap[loFormat] || 'self-paced';
 }
 
-function getEnrollmentStatus(item) {
-  if (item.relationships && item.relationships.enrollment) {
-  }
-  return 'Complete';
-  return '';
+function getEnrollmentStatus() {
+  return i18n.translations['alm.catalog.complete'] || 'Complete';
 }
 
-async function createCourseCard(item, includedData = []) {
-  let attributes = item.attributes;
-  
+async function createCourseCard(originalItem, includedData = []) {
+  let currentItem = originalItem;
+  let { attributes } = currentItem;
+
   // Handle search API response structure
-  if (item.type === 'searchResult' && item.relationships?.model?.data) {
-    // Find the actual learning object in the included data
-    const modelId = item.relationships.model.data.id;
-    const actualLearningObject = includedData.find(included => 
-      included.id === modelId && included.type === 'learningObject'
+  if (currentItem.type === 'searchResult' && currentItem.relationships?.model?.data) {
+    const modelId = currentItem.relationships.model.data.id;
+    const actualLO = includedData.find(
+      (included) => included.id === modelId
+        && included.type === 'learningObject',
     );
-    
-    if (actualLearningObject) {
-      attributes = actualLearningObject.attributes;
-      // Update item to use the actual learning object for other processing
-      item = actualLearningObject;
+
+    if (actualLO) {
+      attributes = actualLO.attributes;
+      currentItem = actualLO;
     }
   }
-  
+
   // Handle both regular API and search API response structures
-  const metadata = attributes.localizedMetadata && attributes.localizedMetadata[0] 
-    ? attributes.localizedMetadata[0] 
-    : { name: attributes.name || 'Untitled Course', description: '', overview: '' };
+  const { currentLocale } = i18n;
+  const untitled = i18n.translations['alm.catalog.untitledcourse']
+    || 'Untitled Course';
+  const metadata = (currentLocale
+    && attributes.localizedMetadata?.find(
+      (m) => m.locale === currentLocale,
+    ))
+    || attributes.localizedMetadata?.[0]
+    || { name: attributes.name || untitled, description: '', overview: '' };
   const cardClass = getCardClass(attributes.loFormat);
   const icon = getCardIcon(attributes.loFormat, attributes.loType);
   const duration = formatDuration(attributes.duration);
-  const status = getEnrollmentStatus(item);
-  
+  const status = getEnrollmentStatus();
+
   // Get actual skill names
-  const skillNames = await getSkillNames(item);
-  const skillsText = skillNames.length > 0 ? skillNames.join(', ') : 'General';
-  
+  const skillNames = await getSkillNames(currentItem);
+  const generalLabel = i18n.translations['alm.catalog.general'] || 'General';
+  const skillsText = skillNames.length > 0
+    ? skillNames.join(', ') : generalLabel;
+
   const card = document.createElement('div');
   card.className = 'course-card';
-  card.dataset.courseId = item.id;
-  
+  card.dataset.courseId = currentItem.id;
+
   // Check if course has an image
   const hasImage = attributes.imageUrl && attributes.imageUrl.trim() !== '';
-  
+
   // Create card structure using createElement
   if (hasImage) {
     const cardImage = document.createElement('div');
     cardImage.className = 'card-image';
-    
+
     const img = document.createElement('img');
     img.src = attributes.imageUrl;
     img.alt = metadata.name;
     img.loading = 'lazy';
-    img.onerror = function() { this.style.display = 'none'; };
-    
+    img.onerror = function () { this.style.display = 'none'; };
+
     const overlay = document.createElement('div');
     overlay.className = 'card-overlay';
-    
+
     const typeBadge = document.createElement('div');
     typeBadge.className = 'card-type-badge';
     typeBadge.textContent = attributes.loFormat || 'Self Paced';
-    
+
     overlay.appendChild(typeBadge);
     cardImage.appendChild(img);
     cardImage.appendChild(overlay);
@@ -338,102 +346,108 @@ async function createCourseCard(item, includedData = []) {
   } else {
     const cardHeader = document.createElement('div');
     cardHeader.className = `card-header ${cardClass}`;
-    
+
     const typeBadge = document.createElement('div');
     typeBadge.className = 'card-type-badge';
     typeBadge.textContent = attributes.loFormat || 'Self Paced';
-    
+
     const cardIcon = document.createElement('div');
     cardIcon.className = 'card-icon';
     cardIcon.textContent = icon;
-    
+
     cardHeader.appendChild(typeBadge);
     cardHeader.appendChild(cardIcon);
     card.appendChild(cardHeader);
   }
-  
+
   // Card body
   const cardBody = document.createElement('div');
   cardBody.className = 'card-body';
-  
+
   const cardTitle = document.createElement('h4');
   cardTitle.className = 'card-title';
   cardTitle.textContent = metadata.name;
-  
+
   const cardType = document.createElement('div');
   cardType.className = 'card-type';
   cardType.textContent = attributes.loType;
-  
+
   const cardFooter = document.createElement('div');
   cardFooter.className = 'card-footer';
-  
+
   const cardSkills = document.createElement('div');
   cardSkills.className = 'card-skills';
-  
+
   const skillIcon = document.createElement('span');
   skillIcon.textContent = '🎯';
-  
+
   const skillText = document.createElement('span');
-  skillText.textContent = `Skills: ${skillsText}`;
-  
+  skillText.textContent = `${i18n.translations['alm.catalog.skills'] || 'Skills'}: ${skillsText}`;
+
   cardSkills.appendChild(skillIcon);
   cardSkills.appendChild(skillText);
   cardFooter.appendChild(cardSkills);
-  
+
   if (status) {
     const cardStatus = document.createElement('div');
     cardStatus.className = 'card-status status-complete';
     cardStatus.textContent = status;
     cardFooter.appendChild(cardStatus);
   }
-  
+
   const cardDuration = document.createElement('div');
   cardDuration.className = 'card-duration';
   cardDuration.textContent = duration;
-  
+
   cardBody.appendChild(cardTitle);
   cardBody.appendChild(cardType);
   cardBody.appendChild(cardFooter);
   cardBody.appendChild(cardDuration);
   card.appendChild(cardBody);
-  
+
   // Add click handler
   card.addEventListener('click', () => {
-    console.log('Course clicked:', item.id);
-    
-    // Extract numeric IDs from the course ID format (e.g., "course:12495374")
-    const courseId = item.id.replace('course:', '');
+    const courseId = currentItem.id.replace('course:', '');
     let instanceId = courseId;
-    
+
     // Try to get the first instance ID from the course data
-    if (item.relationships && item.relationships.instances && item.relationships.instances.data && item.relationships.instances.data.length > 0) {
-      const fullInstanceId = item.relationships.instances.data[0].id;
-      // Extract numeric part and format as courseId-instanceId (e.g., "7235190-7875851")
-      instanceId = fullInstanceId.replace('course:', '').replace('_', '-');
+    const { instances } = currentItem.relationships || {};
+    if (instances && instances.data && instances.data.length > 0) {
+      const fullInstanceId = instances.data[0].id;
+      instanceId = fullInstanceId
+        .replace('course:', '').replace('_', '-');
     }
-    
+
     // Construct the overview URL with proper path format
     const overviewUrl = `/overview/trainingId/${courseId}/trainingInstanceId/${instanceId}`;
-    
+
     // Navigate to the overview page
     window.location.href = overviewUrl;
   });
-  
+
   return card;
 }
 
 async function createSidebar() {
   const sidebar = document.createElement('div');
   sidebar.className = 'catalog-sidebar';
-  
+
   // Fetch catalogs, tags and skills data
   const [catalogs, tags, skills] = await Promise.all([fetchCatalogs(), fetchTags(), fetchSkills()]);
-  
+
   // Create catalog filter items
-  const catalogFilterItems = catalogs.map((catalog, index) => {
-    const catalogName = catalog.attributes?.localizedMetadata?.[0]?.name || catalog.attributes?.name || `Catalog ${catalog.id}`;
+  const catalogFilterItems = catalogs.map((catalog) => {
+    const locale = i18n.currentLocale;
+    const locMeta = locale
+      && catalog.attributes?.localizedMetadata?.find(
+        (m) => m.locale === locale,
+      );
+    const catalogName = locMeta?.name
+      || catalog.attributes?.localizedMetadata?.[0]?.name
+      || catalog.attributes?.name
+      || `Catalog ${catalog.id}`;
     const catalogId = `catalog-${catalog.id}`;
-    
+
     return `
       <div class="filter-item">
         <input type="checkbox" id="${catalogId}" data-catalog="${catalog.id}">
@@ -441,245 +455,408 @@ async function createSidebar() {
       </div>
     `;
   }).join('');
-  
+
   // Create tags filter items
-  const tagsFilterItems = tags.map(tag => `
+  const tagsFilterItems = tags.map((tag) => `
     <div class="filter-item">
       <input type="checkbox" id="tag-${tag.toLowerCase().replace(/\s+/g, '-')}" data-tag="${tag}">
       <label for="tag-${tag.toLowerCase().replace(/\s+/g, '-')}">${tag}</label>
     </div>
   `).join('');
-  
+
   // Create skills filter items
-  const skillsFilterItems = skills.map(skill => `
+  const skillsFilterItems = skills.map((skill) => `
     <div class="filter-item">
       <input type="checkbox" id="skill-${skill.toLowerCase().replace(/\s+/g, '-')}" data-skill="${skill}">
       <label for="skill-${skill.toLowerCase().replace(/\s+/g, '-')}">${skill}</label>
     </div>
   `).join('');
-  
+
   sidebar.innerHTML = `
     <div class="sidebar-section">
-      <h3>Catalogs</h3>
+      <h3>${i18n.translations['alm.catalog.catalogs'] || 'Catalogs'}</h3>
       <div class="filter-group" id="catalogs-filter-group">
-        ${catalogFilterItems || '<div class="filter-item">No catalogs available</div>'}
+        ${catalogFilterItems || `<div class="filter-item">${i18n.translations['alm.catalog.nocatalogs'] || 'No catalogs available'}</div>`}
       </div>
     </div>
-    
+
     <div class="sidebar-section">
-      <h3>Type</h3>
+      <h3>${i18n.translations['alm.catalog.type'] || 'Type'}</h3>
       <div class="filter-group">
         <div class="filter-item">
           <input type="checkbox" id="courses">
-          <label for="courses">Courses</label>
+          <label for="courses">${i18n.translations['alm.catalog.courses'] || 'Courses'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="learning-paths">
-          <label for="learning-paths">Learning Paths</label>
+          <label for="learning-paths">${i18n.translations['alm.catalog.learningpaths'] || 'Learning Paths'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="job-aids">
-          <label for="job-aids">Job aids</label>
+          <label for="job-aids">${i18n.translations['alm.catalog.jobaids'] || 'Job aids'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="certifications">
-          <label for="certifications">Certifications</label>
+          <label for="certifications">${i18n.translations['alm.catalog.certifications'] || 'Certifications'}</label>
         </div>
       </div>
     </div>
-    
+
     <div class="sidebar-section">
-      <h3>Tags</h3>
+      <h3>${i18n.translations['alm.catalog.tags'] || 'Tags'}</h3>
       <div class="filter-group" id="tags-filter-group">
-        ${tagsFilterItems || '<div class="filter-item">No tags available</div>'}
+        ${tagsFilterItems || `<div class="filter-item">${i18n.translations['alm.catalog.notags'] || 'No tags available'}</div>`}
       </div>
     </div>
-    
+
     <div class="sidebar-section">
-      <h3>Skills</h3>
+      <h3>${i18n.translations['alm.catalog.skillsheading'] || 'Skills'}</h3>
       <div class="filter-group" id="skills-filter-group">
-        ${skillsFilterItems || '<div class="filter-item">No skills available</div>'}
+        ${skillsFilterItems || `<div class="filter-item">${i18n.translations['alm.catalog.noskills'] || 'No skills available'}</div>`}
       </div>
     </div>
-    
+
     <div class="sidebar-section">
-      <h3>Format</h3>
+      <h3>${i18n.translations['alm.catalog.format'] || 'Format'}</h3>
       <div class="filter-group" id="format-filter-group">
         <div class="filter-item">
           <input type="checkbox" id="format-activity" data-format="Activity">
-          <label for="format-activity">Activity</label>
+          <label for="format-activity">${i18n.translations['alm.catalog.activity'] || 'Activity'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="format-blended" data-format="Blended">
-          <label for="format-blended">Blended</label>
+          <label for="format-blended">${i18n.translations['alm.catalog.blended'] || 'Blended'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="format-self-paced" data-format="Self Paced">
-          <label for="format-self-paced">Self Paced</label>
+          <label for="format-self-paced">${i18n.translations['alm.catalog.selfpacedformat'] || 'Self Paced'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="format-virtual-classroom" data-format="Virtual Classroom">
-          <label for="format-virtual-classroom">Virtual Classroom</label>
+          <label for="format-virtual-classroom">${i18n.translations['alm.catalog.virtualclassroom'] || 'Virtual Classroom'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="format-classroom" data-format="Classroom">
-          <label for="format-classroom">Classroom</label>
+          <label for="format-classroom">${i18n.translations['alm.catalog.classroom'] || 'Classroom'}</label>
         </div>
       </div>
     </div>
-    
+
     <div class="sidebar-section">
-      <h3>Duration</h3>
+      <h3>${i18n.translations['alm.catalog.duration'] || 'Duration'}</h3>
       <div class="filter-group" id="duration-filter-group">
         <div class="filter-item">
           <input type="checkbox" id="duration-30-mins" data-duration="30-mins">
-          <label for="duration-30-mins">30 mins or less</label>
+          <label for="duration-30-mins">${i18n.translations['alm.catalog.duration30mins'] || '30 mins or less'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="duration-30-mins-2-hours" data-duration="30-mins-2-hours">
-          <label for="duration-30-mins-2-hours">30 mins to 2 hours</label>
+          <label for="duration-30-mins-2-hours">${i18n.translations['alm.catalog.duration30to2hrs'] || '30 mins to 2 hours'}</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" id="duration-2-hours-plus" data-duration="2-hours-plus">
-          <label for="duration-2-hours-plus">2 hours+</label>
+          <label for="duration-2-hours-plus">${i18n.translations['alm.catalog.duration2hrsplus'] || '2 hours+'}</label>
         </div>
       </div>
     </div>
   `;
-  
+
   return sidebar;
 }
 
 function createHeader() {
   const header = document.createElement('div');
   header.className = 'catalog-header';
-  
+
   header.innerHTML = `
-    <h1 class="catalog-title">Repository of Courses, Certifications and Learning Paths</h1>
+    <h1 class="catalog-title">${i18n.translations['alm.catalog.title'] || 'Repository of Courses, Certifications and Learning Paths'}</h1>
     <div class="catalog-search">
-      <input type="text" class="search-input" placeholder="Search">
+      <input type="text" class="search-input" placeholder="${i18n.translations['alm.catalog.search'] || 'Search'}">
       <button class="filters-toggle">
-        <span>Search</span>
+        <span>${i18n.translations['alm.catalog.search'] || 'Search'}</span>
       </button>
     </div>
   `;
-  
+
   return header;
 }
 
-function filterCourses(courses, searchTerm) {
-  if (!searchTerm) return courses;
-  
-  return courses.filter(course => {
-    const metadata = course.attributes.localizedMetadata[0];
-    const name = metadata.name.toLowerCase();
-    const description = metadata.description?.toLowerCase() || '';
-    const overview = metadata.overview?.toLowerCase() || '';
-    const tags = course.attributes.tags?.join(' ').toLowerCase() || '';
-    
-    const searchLower = searchTerm.toLowerCase();
-    
-    return name.includes(searchLower) || 
-           description.includes(searchLower) || 
-           overview.includes(searchLower) ||
-           tags.includes(searchLower);
-  });
-}
-
 export default async function decorate(block) {
-  // Clear the block
   block.innerHTML = '';
-  
+
   // Show loading state
-  block.innerHTML = '<div style="text-align: center; padding: 40px;">Loading courses...</div>';
-  
+  const loadingMsg = i18n.translations['alm.catalog.loading']
+    || 'Loading courses...';
+  block.innerHTML = `<div style="text-align: center; padding: 40px;">${loadingMsg}</div>`;
+
   // Create header
   const header = createHeader();
-  
+
   // Create main content container
   const contentContainer = document.createElement('div');
   contentContainer.className = 'catalog-content';
-  
+
   // Create sidebar (now async)
   const sidebar = await createSidebar();
   contentContainer.appendChild(sidebar);
-  
+
   // Create main content area
   const mainContent = document.createElement('div');
   mainContent.className = 'catalog-main';
-  
+
   // Create course grid
   const courseGrid = document.createElement('div');
   courseGrid.className = 'catalog-grid';
-  
+
   // Create load more container
   const loadMoreContainer = document.createElement('div');
   loadMoreContainer.className = 'load-more-container';
-  
+
   // Store current data and pagination state
   let allCourses = [];
   let nextCursor = null;
   let hasMoreData = false;
   let isLoading = false;
-  let currentFilters = {
+  const currentFilters = {
     searchTerm: '',
-    loTypes: ['course', 'learningProgram', 'certification', 'jobAid']
+    loTypes: [
+      'course', 'learningProgram', 'certification', 'jobAid',
+    ],
   };
-  
-  async function renderCourses(courses, append = false, includedData = []) {
-    if (!append) {
-      courseGrid.innerHTML = '';
-    }
-    
-    // Apply client-side filtering
-    const filteredCourses = filterCoursesByClientSide(courses);
-    
-    if (filteredCourses.length === 0 && !append) {
-      courseGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No courses found matching your criteria.</div>';
-      return;
-    }
-    
-    // Create cards with skill names loaded asynchronously
-    const cardPromises = filteredCourses.map(course => createCourseCard(course, includedData));
-    const cards = await Promise.all(cardPromises);
-    
-    cards.forEach(card => {
-      courseGrid.appendChild(card);
+
+  // --- Filter helpers (defined before use) ---
+
+  function getActiveTypeFilters() {
+    const sel = '#courses, #learning-paths, #job-aids, #certifications';
+    const typeCheckboxes = sidebar.querySelectorAll(sel);
+    const activeTypes = [];
+    const typeMap = {
+      courses: 'course',
+      'learning-paths': 'learningProgram',
+      'job-aids': 'jobAid',
+      certifications: 'certification',
+    };
+
+    typeCheckboxes.forEach((cb) => {
+      if (cb.checked && typeMap[cb.id]) {
+        activeTypes.push(typeMap[cb.id]);
+      }
+    });
+
+    return activeTypes.length > 0
+      ? activeTypes
+      : ['course', 'learningProgram', 'certification', 'jobAid'];
+  }
+
+  function getActiveFormatFilters() {
+    const sel = '#format-filter-group input[type="checkbox"]:checked';
+    const cbs = sidebar.querySelectorAll(sel);
+    const activeFormats = [];
+    cbs.forEach((cb) => { activeFormats.push(cb.dataset.format); });
+    return activeFormats;
+  }
+
+  function getActiveDurationFilters() {
+    const sel = '#duration-filter-group input[type="checkbox"]:checked';
+    const cbs = sidebar.querySelectorAll(sel);
+    const activeDurations = [];
+    cbs.forEach((cb) => { activeDurations.push(cb.dataset.duration); });
+    return activeDurations;
+  }
+
+  function getActiveTagFilters() {
+    const sel = '#tags-filter-group input[type="checkbox"]:checked';
+    const cbs = sidebar.querySelectorAll(sel);
+    const activeTags = [];
+    cbs.forEach((cb) => { activeTags.push(cb.dataset.tag); });
+    return activeTags;
+  }
+
+  function getActiveSkillFilters() {
+    const sel = '#skills-filter-group input[type="checkbox"]:checked';
+    const cbs = sidebar.querySelectorAll(sel);
+    const activeSkills = [];
+    cbs.forEach((cb) => { activeSkills.push(cb.dataset.skill); });
+    return activeSkills;
+  }
+
+  function matchSkillInCache(courseSkillIds, activeSkills) {
+    let found = false;
+    courseSkillIds.some((skillId) => {
+      if (skillCache.has(skillId)) {
+        const name = skillCache.get(skillId);
+        const nameLower = name.toLowerCase();
+        const match = activeSkills.some(
+          (s) => nameLower.includes(s.toLowerCase())
+            || s.toLowerCase().includes(nameLower),
+        );
+        if (match) { found = true; }
+      }
+      return found;
+    });
+    return found;
+  }
+
+  function filterCoursesByClientSide(courses) {
+    const activeFormats = getActiveFormatFilters();
+    const activeDurations = getActiveDurationFilters();
+    const activeTags = getActiveTagFilters();
+    const activeSkills = getActiveSkillFilters();
+
+    return courses.filter((course) => {
+      const { attributes } = course;
+
+      // Format filter
+      if (activeFormats.length > 0) {
+        const fmt = attributes.loFormat || 'Self Paced';
+        if (!activeFormats.includes(fmt)) return false;
+      }
+
+      // Duration filter
+      if (activeDurations.length > 0) {
+        const mins = (attributes.duration || 0) / 60;
+        let matchesDuration = false;
+        activeDurations.forEach((d) => {
+          switch (d) {
+            case '30-mins':
+              if (mins <= 30) matchesDuration = true;
+              break;
+            case '30-mins-2-hours':
+              if (mins > 30 && mins <= 120) matchesDuration = true;
+              break;
+            case '2-hours-plus':
+              if (mins > 120) matchesDuration = true;
+              break;
+            default:
+              break;
+          }
+        });
+        if (!matchesDuration) return false;
+      }
+
+      // Tags filter
+      if (activeTags.length > 0) {
+        const courseTags = attributes.tags || [];
+        const hasTag = activeTags.some(
+          (tag) => courseTags.some(
+            (ct) => ct.toLowerCase().includes(tag.toLowerCase()),
+          ),
+        );
+        if (!hasTag) return false;
+      }
+
+      // Skills filter
+      if (activeSkills.length > 0) {
+        let hasMatchingSkill = false;
+
+        const skillsData = course.relationships
+          && course.relationships.skills
+          && course.relationships.skills.data;
+        if (skillsData) {
+          const ids = skillsData.map((ref) => {
+            const m = ref.id.match(/_(\d+)$/);
+            return m ? m[1] : null;
+          }).filter((id) => id !== null);
+
+          hasMatchingSkill = matchSkillInCache(ids, activeSkills);
+        }
+
+        if (!hasMatchingSkill) {
+          const courseTags = attributes.tags || [];
+          const loc = i18n.currentLocale;
+          const meta = (loc
+            && attributes.localizedMetadata?.find(
+              (m) => m.locale === loc,
+            ))
+            || attributes.localizedMetadata?.[0];
+          const cName = meta
+            ? meta.name.toLowerCase() : '';
+          const cDesc = meta
+            ? (meta.description || '').toLowerCase() : '';
+
+          hasMatchingSkill = activeSkills.some((sel) => {
+            const sl = sel.toLowerCase();
+            return courseTags.some(
+              (tag) => tag.toLowerCase().includes(sl),
+            ) || cName.includes(sl) || cDesc.includes(sl);
+          });
+        }
+
+        if (!hasMatchingSkill) return false;
+      }
+
+      return true;
     });
   }
-  
+
+  // --- Render and data helpers ---
+
   function showError(message) {
     courseGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #d32f2f;">${message}</div>`;
   }
-  
+
+  async function renderCourses(
+    courses,
+    append = false,
+    includedData = [],
+  ) {
+    if (!append) {
+      courseGrid.innerHTML = '';
+    }
+
+    const filtered = filterCoursesByClientSide(courses);
+
+    if (filtered.length === 0 && !append) {
+      const msg = i18n.translations['alm.catalog.noresults']
+        || 'No courses found matching your criteria.';
+      courseGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">${msg}</div>`;
+      return;
+    }
+
+    const cardPromises = filtered.map(
+      (course) => createCourseCard(course, includedData),
+    );
+    const cards = await Promise.all(cardPromises);
+    cards.forEach((card) => { courseGrid.appendChild(card); });
+  }
+
   function updateLoadMoreButton() {
     loadMoreContainer.innerHTML = '';
-    
+
     if (isLoading) {
-      loadMoreContainer.innerHTML = '<div class="loading-text">Loading more courses...</div>';
+      const msg = i18n.translations['alm.catalog.loadingmore']
+        || 'Loading more courses...';
+      loadMoreContainer.innerHTML = `<div class="loading-text">${msg}</div>`;
     } else if (hasMoreData) {
-      const loadMoreBtn = document.createElement('button');
-      loadMoreBtn.className = 'load-more-btn';
-      loadMoreBtn.textContent = 'Load More';
-      loadMoreBtn.addEventListener('click', loadMoreCourses);
-      loadMoreContainer.appendChild(loadMoreBtn);
+      const btn = document.createElement('button');
+      btn.className = 'load-more-btn';
+      btn.textContent = i18n.translations['alm.catalog.loadmore']
+        || 'Load More';
+      // eslint-disable-next-line no-use-before-define
+      btn.addEventListener('click', loadMoreCourses);
+      loadMoreContainer.appendChild(btn);
     }
   }
-  
+
   async function loadCourses(resetData = true) {
     try {
       isLoading = true;
       updateLoadMoreButton();
-      
+
       const cursor = resetData ? null : nextCursor;
-      const data = await fetchLearningObjects(9, currentFilters.searchTerm, {
-        loTypes: getActiveTypeFilters(),
-        skillNames: getActiveSkillFilters(),
-        tagNames: getActiveTagFilters()
-      }, cursor);
-      
+      const data = await fetchLearningObjects(
+        9,
+        currentFilters.searchTerm,
+        {
+          loTypes: getActiveTypeFilters(),
+          skillNames: getActiveSkillFilters(),
+          tagNames: getActiveTagFilters(),
+        },
+        cursor,
+      );
+
       const newCourses = data.data || [];
-      
+
       if (resetData) {
         allCourses = newCourses;
         renderCourses(allCourses, false);
@@ -687,237 +864,47 @@ export default async function decorate(block) {
         allCourses = [...allCourses, ...newCourses];
         renderCourses(newCourses, true);
       }
-      
-      // Extract cursor from next link if available
+
       nextCursor = null;
       hasMoreData = false;
-      
+
       if (data.links && data.links.next) {
         const nextUrl = new URL(data.links.next);
         nextCursor = nextUrl.searchParams.get('page[cursor]');
         hasMoreData = true;
       }
-      
-      // Update course count if available
-      if (data.meta && data.meta.count) {
-        console.log(`Loaded ${allCourses.length} of ${data.meta.count} total courses`);
-      }
-      
+
       isLoading = false;
       updateLoadMoreButton();
-      
     } catch (error) {
       console.error('Failed to load courses:', error);
       isLoading = false;
       if (resetData) {
-        showError('Failed to load courses. Please try again later.');
+        const msg = i18n.translations['alm.catalog.loaderror']
+          || 'Failed to load courses. Please try again later.';
+        showError(msg);
       }
       updateLoadMoreButton();
     }
   }
-  
+
   async function loadMoreCourses() {
     if (!hasMoreData || isLoading) return;
     await loadCourses(false);
   }
-  
-  function getActiveTypeFilters() {
-    const typeCheckboxes = sidebar.querySelectorAll('#courses, #learning-paths, #job-aids, #certifications');
-    const activeTypes = [];
-    
-    typeCheckboxes.forEach(checkbox => {
-      if (checkbox.checked) {
-        switch (checkbox.id) {
-          case 'courses':
-            activeTypes.push('course');
-            break;
-          case 'learning-paths':
-            activeTypes.push('learningProgram');
-            break;
-          case 'job-aids':
-            activeTypes.push('jobAid');
-            break;
-          case 'certifications':
-            activeTypes.push('certification');
-            break;
-        }
-      }
-    });
-    
-    return activeTypes.length > 0 ? activeTypes : ['course', 'learningProgram', 'certification', 'jobAid'];
-  }
-  
-  function getActiveFormatFilters() {
-    const formatCheckboxes = sidebar.querySelectorAll('#format-filter-group input[type="checkbox"]:checked');
-    const activeFormats = [];
-    
-    formatCheckboxes.forEach(checkbox => {
-      activeFormats.push(checkbox.dataset.format);
-    });
-    
-    return activeFormats;
-  }
-  
-  function getActiveDurationFilters() {
-    const durationCheckboxes = sidebar.querySelectorAll('#duration-filter-group input[type="checkbox"]:checked');
-    const activeDurations = [];
-    
-    durationCheckboxes.forEach(checkbox => {
-      activeDurations.push(checkbox.dataset.duration);
-    });
-    
-    return activeDurations;
-  }
-  
-  function getActiveTagFilters() {
-    const tagCheckboxes = sidebar.querySelectorAll('#tags-filter-group input[type="checkbox"]:checked');
-    const activeTags = [];
-    
-    tagCheckboxes.forEach(checkbox => {
-      activeTags.push(checkbox.dataset.tag);
-    });
-    
-    return activeTags;
-  }
-  
-  function getActiveSkillFilters() {
-    const skillCheckboxes = sidebar.querySelectorAll('#skills-filter-group input[type="checkbox"]:checked');
-    const activeSkills = [];
-    
-    skillCheckboxes.forEach(checkbox => {
-      activeSkills.push(checkbox.dataset.skill);
-    });
-    
-    return activeSkills;
-  }
-  
-  function getActiveCatalogFilters() {
-    const catalogCheckboxes = sidebar.querySelectorAll('#catalogs-filter-group input[type="checkbox"]:checked');
-    const activeCatalogs = [];
-    
-    catalogCheckboxes.forEach(checkbox => {
-      activeCatalogs.push(checkbox.dataset.catalog);
-    });
-    
-    return activeCatalogs;
-  }
-  
-  function filterCoursesByClientSide(courses) {
-    const activeFormats = getActiveFormatFilters();
-    const activeDurations = getActiveDurationFilters();
-    const activeTags = getActiveTagFilters();
-    const activeSkills = getActiveSkillFilters();
-    
-    return courses.filter(course => {
-      const attributes = course.attributes;
-      
-      // Format filter
-      if (activeFormats.length > 0) {
-        const courseFormat = attributes.loFormat || 'Self Paced';
-        if (!activeFormats.includes(courseFormat)) {
-          return false;
-        }
-      }
-      
-      // Duration filter
-      if (activeDurations.length > 0) {
-        const courseDuration = attributes.duration || 0;
-        const durationInMinutes = courseDuration / 60;
-        
-        let matchesDuration = false;
-        activeDurations.forEach(duration => {
-          switch (duration) {
-            case '30-mins':
-              if (durationInMinutes <= 30) matchesDuration = true;
-              break;
-            case '30-mins-2-hours':
-              if (durationInMinutes > 30 && durationInMinutes <= 120) matchesDuration = true;
-              break;
-            case '2-hours-plus':
-              if (durationInMinutes > 120) matchesDuration = true;
-              break;
-          }
-        });
-        
-        if (!matchesDuration) {
-          return false;
-        }
-      }
-      
-      // Tags filter
-      if (activeTags.length > 0) {
-        const courseTags = attributes.tags || [];
-        const hasMatchingTag = activeTags.some(tag => 
-          courseTags.some(courseTag => courseTag.toLowerCase().includes(tag.toLowerCase()))
-        );
-        if (!hasMatchingTag) {
-          return false;
-        }
-      }
-      
-      // Skills filter - check course skills against selected skills
-      if (activeSkills.length > 0) {
-        let hasMatchingSkill = false;
-        
-        // Check if course has skills in relationships
-        if (course.relationships && course.relationships.skills && course.relationships.skills.data) {
-          // Get skill names for this course (we'll need to check against cached skills)
-          const courseSkillIds = course.relationships.skills.data.map(skillRef => {
-            const skillIdMatch = skillRef.id.match(/_(\d+)$/);
-            return skillIdMatch ? skillIdMatch[1] : null;
-          }).filter(id => id !== null);
-          
-          // Check if any of the course's skills match the selected skills
-          for (const skillId of courseSkillIds) {
-            if (skillCache.has(skillId)) {
-              const skillName = skillCache.get(skillId);
-              if (activeSkills.some(selectedSkill => 
-                skillName.toLowerCase().includes(selectedSkill.toLowerCase()) ||
-                selectedSkill.toLowerCase().includes(skillName.toLowerCase())
-              )) {
-                hasMatchingSkill = true;
-                break;
-              }
-            }
-          }
-        }
-        
-        // Also check if any selected skill matches the course tags or metadata
-        if (!hasMatchingSkill) {
-          const courseTags = attributes.tags || [];
-          const metadata = attributes.localizedMetadata && attributes.localizedMetadata[0];
-          const courseName = metadata ? metadata.name.toLowerCase() : '';
-          const courseDescription = metadata ? (metadata.description || '').toLowerCase() : '';
-          
-          hasMatchingSkill = activeSkills.some(selectedSkill => {
-            const skillLower = selectedSkill.toLowerCase();
-            return courseTags.some(tag => tag.toLowerCase().includes(skillLower)) ||
-                   courseName.includes(skillLower) ||
-                   courseDescription.includes(skillLower);
-          });
-        }
-        
-        if (!hasMatchingSkill) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
-  }
-  
+
   // Initial load
   await loadCourses(true);
-  
+
   // Clear loading and add content
   block.innerHTML = '';
   block.appendChild(header);
-  
+
   mainContent.appendChild(courseGrid);
   mainContent.appendChild(loadMoreContainer);
   contentContainer.appendChild(mainContent);
   block.appendChild(contentContainer);
-  
+
   // Add search functionality with debouncing
   let searchTimeout;
   const searchInput = header.querySelector('.search-input');
@@ -925,20 +912,25 @@ export default async function decorate(block) {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(async () => {
       currentFilters.searchTerm = e.target.value;
-      
-      // Use search API if there's a search term, otherwise use regular API
+
       if (currentFilters.searchTerm.trim()) {
         try {
           isLoading = true;
           updateLoadMoreButton();
-          
-          const data = await searchLearningObjects(currentFilters.searchTerm, 9);
+
+          const data = await searchLearningObjects(
+            currentFilters.searchTerm,
+            9,
+          );
           const newCourses = data.data || [];
-          
+
           allCourses = newCourses;
-          await renderCourses(allCourses, false, data.included || []);
-          
-          // Handle pagination for search results
+          await renderCourses(
+            allCourses,
+            false,
+            data.included || [],
+          );
+
           nextCursor = null;
           hasMoreData = false;
           if (data.links && data.links.next) {
@@ -946,32 +938,39 @@ export default async function decorate(block) {
             nextCursor = nextUrl.searchParams.get('page[cursor]');
             hasMoreData = true;
           }
-          
+
           isLoading = false;
           updateLoadMoreButton();
         } catch (error) {
           console.error('Search failed:', error);
           isLoading = false;
-          showError('Search failed. Please try again.');
+          const msg = i18n.translations['alm.catalog.searcherror']
+            || 'Search failed. Please try again.';
+          showError(msg);
         }
       } else {
-        await loadCourses(true); // Reset data for new search
+        await loadCourses(true);
       }
-    }, 500); // 500ms debounce
+    }, 500);
   });
-  
+
   // Add filter functionality
-  const filterCheckboxes = sidebar.querySelectorAll('input[type="checkbox"]');
-  filterCheckboxes.forEach(checkbox => {
+  const filterCheckboxes = sidebar.querySelectorAll(
+    'input[type="checkbox"]',
+  );
+  filterCheckboxes.forEach((checkbox) => {
     checkbox.addEventListener('change', async () => {
-      console.log('Filter changed:', checkbox.id, checkbox.checked);
-      
-      // Server-side filters that require API reload
-      if (['courses', 'learning-paths', 'job-aids', 'certifications'].includes(checkbox.id) ||
-          checkbox.dataset.skill || checkbox.dataset.tag || checkbox.dataset.catalog) {
-        await loadCourses(true); // Reset data for new filter
+      const serverFilters = [
+        'courses', 'learning-paths', 'job-aids', 'certifications',
+      ];
+      const isServerFilter = serverFilters.includes(checkbox.id)
+        || checkbox.dataset.skill
+        || checkbox.dataset.tag
+        || checkbox.dataset.catalog;
+
+      if (isServerFilter) {
+        await loadCourses(true);
       } else {
-        // Client-side filters (format, duration) - just re-render
         await renderCourses(allCourses, false);
       }
     });
