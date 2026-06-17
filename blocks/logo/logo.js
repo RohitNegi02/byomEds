@@ -12,8 +12,8 @@
 
 const THEMES = ['light', 'dark', 'green', 'linkedin'];
 
-// Image formats to look for in git, in priority order (svg preferred, then raster).
-const GIT_LOGO_EXTENSIONS = ['svg', 'png', 'jpg', 'jpeg', 'webp'];
+// Image formats to look for in git, in priority order (svg preferred, then png).
+const GIT_LOGO_EXTENSIONS = ['svg', 'png'];
 
 // Remembers which git logo paths 404'd so we don't re-request them on every theme switch.
 const gitLogoMissing = new Set();
