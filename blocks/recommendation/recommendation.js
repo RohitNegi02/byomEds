@@ -687,23 +687,10 @@ function createSkillSection(skillGroup, isFirst = false) {
   recommendations.forEach((recommendation) => {
     const { card, actionButton } = createRecommendationCard(recommendation);
     grid.appendChild(card);
-
-    const addButton = card.querySelector('.add-button');
-
-    cardButtons.push({
-      actionButton,
-      addButton,
-      learningObjectId: recommendation.id,
-      instanceId: recommendation.instanceId,
-    });
   });
 
   const goToCatalogCard = createGoToCatalogCard();
   grid.appendChild(goToCatalogCard);
-
-  cardButtons.forEach(async ({ actionButton, addButton, learningObjectId, instanceId }) => {
-    await updateCardState(actionButton, addButton, learningObjectId, instanceId);
-  });
 
   scrollContainer.appendChild(grid);
 
@@ -814,14 +801,14 @@ export default async function decorate(block) {
 
   const remainingStripsCount = totalStripCount - firstValidStripNumber;
 
-  if (remainingStripsCount > 0) {
+    if (remainingStripsCount > 0) {
     const showMoreButton = document.createElement('button');
     showMoreButton.className = 'show-more-button';
-    showMoreButton.textContent = i18n.translations['alm.recommendation.showmore'];
+    showMoreButton.textContent = i18n.translations['alm.recommendation.showmore'] || 'Show More';
 
     addManagedListener(showMoreButton, 'click', async () => {
       showMoreButton.disabled = true;
-      showMoreButton.textContent = i18n.translations['alm.recommendation.loading'] + '...';
+      showMoreButton.textContent = (i18n.translations['alm.recommendation.loading'] || 'Loading') + '...';
 
       const stripPromises = [];
       for (let i = firstValidStripNumber + 1; i <= totalStripCount; i++) {

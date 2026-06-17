@@ -93,9 +93,11 @@ async function apiRequest(endpoint, options = {}) {
       lastError = error;
       clearTimeout(timeoutId);
 
-      // Don't retry on abort (timeout) or 400-level errors (except 401)
-      if (error.name === 'AbortError' || 
-          (error.message.includes('API error 4') && !error.message.includes('401'))) {
+      // Don't retry on:
+      // - Abort (timeout)
+      // - 4xx client errors (bad request, unauthorized, forbidden, not found, rate limit, etc.)
+      // - Only retry on 5xx server errors or network failures
+      if (error.name === 'AbortError' || error.message.includes('API error 4')) {
         throw error;
       }
 
@@ -146,7 +148,7 @@ export async function fetchLearningObject(learningObjectId) {
 
 /**
  * Fetch enrollment state
- * @param {string} learningObjectId - Learning object ID (with or without prefix)
+ * @param {string} learningObjectId - Learning object ID (with or without prefix, may include instance ID)
  * @param {string} instanceId - Instance ID (numeric part only)
  * @returns {Promise<Object>} - Enrollment state
  */
@@ -157,9 +159,15 @@ export async function fetchEnrollmentState(learningObjectId, instanceId) {
   }
 
   // Remove 'course:' or 'learningProgram:' prefix if present
-  const cleanLoId = learningObjectId.replace(/^(course:|learningProgram:)/, '');
+  let cleanLoId = learningObjectId.replace(/^(course:|learningProgram:)/, '');
   
-  // The enrollment ID format is: loId_instanceId_userId (without prefixes)
+  // If the learningObjectId includes an underscore, it has both loId and instanceId
+  // We only want the first part (the actual learning object ID)
+  if (cleanLoId.includes('_')) {
+    cleanLoId = cleanLoId.split('_')[0];
+  }
+  
+  // The enrollment ID format is: loId_instanceId_userId (all numeric, no prefixes)
   const enrollmentId = `${cleanLoId}_${instanceId}_${userId}`;
   const endpoint = `/enrollments/${enrollmentId}`;
   
