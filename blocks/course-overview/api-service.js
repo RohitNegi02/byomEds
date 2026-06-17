@@ -79,8 +79,6 @@ async function enrollUser(courseId, instanceId) {
     // Use query parameters as per API specification
     const url = `${API_CONFIG.baseUrl}/enrollments?loId=${courseId}&loInstanceId=${loInstanceId}&omitDeprecated=true&access_token=${accessToken}`;
     
-    console.log('Enroll API URL:', url);
-    console.log('Enroll parameters:', { loId: courseId, loInstanceId, isLP });
     
     const response = await almApiCall(url, {
       method: 'POST',
@@ -110,8 +108,6 @@ async function unenrollUser(enrollmentId) {
     const encodedEnrollmentId = encodeURIComponent(enrollmentId);
     const url = `${API_CONFIG.baseUrl}/enrollments/${encodedEnrollmentId}`;
     
-    console.log('Unenroll API URL:', url);
-    console.log('Unenroll enrollmentId:', enrollmentId);
     
     const response = await almApiCall(url, {
       method: 'DELETE'
@@ -157,15 +153,12 @@ async function rateCourse(enrollmentId, rating) {
     const encodedEnrollmentId = encodeURIComponent(enrollmentId);
     const url = `${API_CONFIG.baseUrl}/enrollments/${encodedEnrollmentId}/rate`;
     
-    console.log('Rating API URL:', url);
-    console.log('Rating payload:', { rating, enrollmentId });
     
     // Simple payload format as expected by the API
     const payload = {
       rating: parseInt(rating)
     };
     
-    console.log('Rating request payload:', JSON.stringify(payload, null, 2));
     
     const response = await almApiCall(url, {
       method: 'PATCH',
@@ -175,7 +168,6 @@ async function rateCourse(enrollmentId, rating) {
       body: JSON.stringify(payload)
     });
 
-    console.log('Rating response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -195,7 +187,6 @@ async function fetchCourseNotes(courseId, instanceId) {
   try {
     const url = `${API_CONFIG.baseUrl}/learningObjects/${courseId}/instances/${instanceId}/note`;
     
-    console.log('Fetching notes from URL:', url);
     
     const response = await almApiCall(url, {
       method: 'GET'
@@ -206,7 +197,6 @@ async function fetchCourseNotes(courseId, instanceId) {
     }
 
     const data = await response.json();
-    console.log('Notes data fetched:', data);
     return data;
   } catch (error) {
     console.error('Error fetching course notes:', error);

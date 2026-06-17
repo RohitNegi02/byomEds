@@ -25,13 +25,11 @@ function handleUnauthorized() {
   // Check if we're already in an OAuth callback flow (has 'code' parameter)
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('code')) {
-    console.log('Currently in OAuth callback flow, skipping redirect to prevent loop');
     return;
   }
 
   // Check if we're already in the process of redirecting
   if (isRedirecting) {
-    console.log('Already redirecting to login, skipping duplicate redirect');
     return;
   }
 
@@ -40,13 +38,10 @@ function handleUnauthorized() {
   if (lastRedirect) {
     const timeSinceRedirect = Date.now() - parseInt(lastRedirect);
     if (timeSinceRedirect < REDIRECT_COOLDOWN_MS) {
-      console.log('Recently redirected to login, preventing loop. Please wait...');
       return;
     }
   }
 
-  console.log('401 Unauthorized - Clearing tokens and redirecting to login');
-  
   // Set redirect flag
   isRedirecting = true;
   sessionStorage.setItem(REDIRECT_COOLDOWN_KEY, Date.now().toString());

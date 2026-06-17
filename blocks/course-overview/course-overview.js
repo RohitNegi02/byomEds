@@ -3,6 +3,7 @@
 
 import { fetchLearnerCourseData, fetchCourseNotes } from './api-service.js';
 import { getCourseIdFromUrl, extractDataFromCDN } from './ui-components.js';
+import { addManagedListener, cleanupChildren, showLoading, showError } from '../../scripts/dom-utils.js';
 import { 
   extractAuthorNames, 
   extractSkillsData, 
@@ -78,8 +79,6 @@ function createModuleItem(module) {
 
 export default async function decorate(block) {
   try {
-    console.log('=== COURSE OVERVIEW DECORATE FUNCTION STARTED ===');
-    
     // First check URL to determine if this is a Learning Program
     const urlCourseId = getCourseIdFromUrl();
     const isLPFromUrl = urlCourseId && urlCourseId.startsWith('learningProgram:');
@@ -106,22 +105,14 @@ export default async function decorate(block) {
       return;
     }
     
-    console.log('Course/LP ID extracted:', courseId);
-    
     // Fetch learner-specific data
     const learnerData = await fetchLearnerCourseData(courseId);
-    console.log('Learner data fetched:', learnerData);
     
     // Extract data from CDN HTML
     const cdnData = extractDataFromCDN(block);
-    console.log('Extracted CDN data:', cdnData);
     
     // Check if this is a learning program
     const isLearningProgram = learnerData?.data?.attributes?.loType === 'learningProgram' || cdnData.isLearningProgram;
-    console.log('Is Learning Program:', isLearningProgram);
-    console.log('API loType:', learnerData?.data?.attributes?.loType);
-    console.log('CDN isLearningProgram:', cdnData.isLearningProgram);
-    console.log('Number of CDN courses:', cdnData.courses?.length);
     
     if (isLearningProgram) {
       // Handle Learning Program
@@ -131,11 +122,15 @@ export default async function decorate(block) {
       await handleRegularCourse(block, courseId, learnerData, cdnData);
     }
     
-    console.log('Course overview initialized successfully');
-    
   } catch (error) {
     console.error('Error initializing course overview:', error);
+    showError(block, 'Failed to load course overview. Please try again.', () => {
+      decorate(block);
+    });
   }
+  
+  // Return cleanup function
+  return () => cleanupChildren(block);
 }
 
 // Handle regular course flow
@@ -185,7 +180,6 @@ async function handleRegularCourse(block, courseId, learnerData, cdnData) {
         if (parts.length >= 2) {
           // parts[0] is course:courseId, parts[1] is instanceId
           instanceId = `${parts[0]}_${parts[1]}`;
-          console.log('Extracted instanceId from enrollmentId:', instanceId);
         }
       }
       
@@ -194,7 +188,6 @@ async function handleRegularCourse(block, courseId, learnerData, cdnData) {
         hasNotes = notesData && notesData.data && notesData.data.length > 0;
       }
     } catch (error) {
-      console.log('Notes check failed, hiding notes tab:', error.message);
       hasNotes = false;
     }
   }
@@ -269,12 +262,9 @@ function parseDuration(durationStr) {
 
 // Handle learning program flow
 async function handleLearningProgram(block, lpId, learnerData, cdnData) {
-  console.log('=== HANDLING LEARNING PROGRAM ===');
-  console.log('CDN Data:', cdnData);
   
   // Process LP data from API
   let lpData = processLearningProgramData(learnerData);
-  console.log('Processed LP data from API:', lpData);
   
   // Extract enrollment info for LP
   const enrollmentInfo = {
@@ -296,12 +286,10 @@ async function handleLearningProgram(block, lpId, learnerData, cdnData) {
       if (enrollmentData && enrollmentData.attributes) {
         if (enrollmentData.attributes.rating) {
           enrollmentInfo.currentRating = enrollmentData.attributes.rating;
-          console.log('LP Current rating from API:', enrollmentInfo.currentRating);
         }
         // Use LP enrollment progress if individual course enrollments aren't available
         if (enrollmentData.attributes.progressPercent !== undefined) {
           enrollmentInfo.progressPercent = enrollmentData.attributes.progressPercent;
-          console.log('LP Progress from enrollment:', enrollmentInfo.progressPercent);
         }
       }
     }
@@ -310,13 +298,9 @@ async function handleLearningProgram(block, lpId, learnerData, cdnData) {
   // Merge CDN course data with API data
   // CDN is the source of truth for which courses exist, API provides enrollment data
   if (cdnData.courses && cdnData.courses.length > 0) {
-    console.log('=== MERGING CDN AND API DATA ===');
-    console.log('API lpData.courses:', lpData?.courses);
-    console.log('CDN cdnData.courses:', cdnData.courses);
     
     // Start with CDN courses and merge in API enrollment data
     const mergedCourses = cdnData.courses.map((cdnCourse, index) => {
-      console.log(`\nMerging course ${index}: ${cdnCourse.title}`);
       
       // Find matching API course by ID
       const apiCourse = lpData?.courses?.find(apiC => {
@@ -327,7 +311,6 @@ async function handleLearningProgram(block, lpId, learnerData, cdnData) {
         return false;
       });
       
-      console.log('Found API course:', apiCourse ? 'Yes' : 'No');
       
       // Build merged course object starting with CDN data
       const mergedCourse = {
@@ -348,7 +331,6 @@ async function handleLearningProgram(block, lpId, learnerData, cdnData) {
         instanceResources: apiCourse?.instanceResources || []
       };
       
-      console.log('Merged course:', mergedCourse);
       return mergedCourse;
     });
     
@@ -357,7 +339,6 @@ async function handleLearningProgram(block, lpId, learnerData, cdnData) {
       lpData.courses = mergedCourses;
     } else {
       // Fallback: use CDN data if no API data
-      console.log('No API LP data, using CDN courses data');
       lpData = {
       isLearningProgram: true,
       lpId: lpId,
@@ -383,14 +364,10 @@ async function handleLearningProgram(block, lpId, learnerData, cdnData) {
         instanceResources: []
       }))
       };
-      console.log('Created lpData from CDN with modules and images:', lpData);
     }
     
-    console.log('=== MERGE COMPLETE ===');
-    console.log('Final lpData.courses:', lpData.courses);
   }
   
-  console.log('Final LP data:', lpData);
   
   // Process general data
   const authorNames = extractAuthorNames(learnerData);
@@ -433,7 +410,7 @@ function setupLPCourseExpansion(block, lpData, learnerData, resourceGrades) {
     // Make course header clickable to navigate to course page
     if (courseHeader && courseId) {
       courseHeader.style.cursor = 'pointer';
-      courseHeader.addEventListener('click', (e) => {
+      addManagedListener(courseHeader, 'click', (e) => {
         // Don't navigate if clicking the expand button
         if (e.target.closest('.course-card-expand-btn')) {
           return;
@@ -446,7 +423,6 @@ function setupLPCourseExpansion(block, lpData, learnerData, resourceGrades) {
         if (course.courseId) {
           trainingId = course.courseId;
           instanceId = course.instanceId || course.courseId; // Fallback to courseId if no instanceId
-          console.log('Using CDN extracted IDs - Course:', trainingId, 'Instance:', instanceId);
         }
         // Otherwise use API data
         else if (course.id && course.id.startsWith('course:')) {
@@ -461,13 +437,12 @@ function setupLPCourseExpansion(block, lpData, learnerData, resourceGrades) {
         
         // Navigate to course overview page
         const courseUrl = `/overview/trainingId/${trainingId}/trainingInstanceId/${instanceId}`;
-        console.log('Navigating to course:', courseUrl);
         window.location.href = courseUrl;
       });
     }
     
     if (expandBtn && modulesContainer) {
-      expandBtn.addEventListener('click', () => {
+      addManagedListener(expandBtn, 'click', () => {
         const isExpanded = modulesContainer.style.display !== 'none';
         const expandIcon = expandBtn.querySelector('.expand-icon');
         
@@ -482,21 +457,12 @@ function setupLPCourseExpansion(block, lpData, learnerData, resourceGrades) {
           
           // Load modules if not already loaded
           if (modulesContainer.querySelector('.modules-loading')) {
-            console.log('=== LOADING MODULES FOR COURSE ===');
-            console.log('Course ID:', courseId);
-            console.log('Course Index:', index);
-            console.log('LP Data:', lpData);
-            console.log('LP Data Courses:', lpData.courses);
-            console.log('Current Course Data:', lpData.courses[index]);
             
             // Try to get modules from API first
             let modules = processLPCourseModules(courseId, learnerData, resourceGrades);
-            console.log('API Modules:', modules);
             
             // If no API modules and we have CDN modules, use those
             if (modules.length === 0 && lpData.courses[index]?.modules?.length > 0) {
-              console.log('Using CDN modules for course:', courseId);
-              console.log('CDN Modules:', lpData.courses[index].modules);
               
               // Check if this course is completed to mark all modules as completed
               const courseCompleted = lpData.courses[index]?.enrollment?.isCompleted === true;
@@ -515,28 +481,23 @@ function setupLPCourseExpansion(block, lpData, learnerData, resourceGrades) {
                 statusClass: courseCompleted ? 'completed' : '',
                 isCompleted: courseCompleted
               }));
-              console.log('Mapped modules with completion status:', modules);
             }
             
             // Clear loading message
             modulesContainer.innerHTML = '';
             
             if (modules.length === 0) {
-              console.log('No modules found, showing no modules message');
               modulesContainer.innerHTML = '<p class="no-modules">No modules available</p>';
             } else {
-              console.log('Creating modules list with', modules.length, 'modules');
               const modulesList = document.createElement('div');
               modulesList.className = 'modules-list lp-course-modules';
               
               modules.forEach(module => {
-                console.log('Creating module item:', module);
                 const moduleElement = createModuleItem(module);
                 modulesList.appendChild(moduleElement);
               });
               
               modulesContainer.appendChild(modulesList);
-              console.log('Modules appended to container');
             }
           }
         }

@@ -17,6 +17,9 @@ import {
   toCamelCase,
 } from './aem.js';
 
+// Initialize global error handlers
+import './error-handler.js';
+
 /**
  * Builds hero block and prepends to main in a new section.
  * @param {Element} main The container element

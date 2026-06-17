@@ -46,44 +46,36 @@ function extractSkillsData(learnerData) {
     item.type === 'learningObjectSkill'
   );
   
-  console.log('Found learningObjectSkills:', learningObjectSkills);
   
   learningObjectSkills.forEach(skillObj => {
-    console.log('Processing skillObj:', skillObj);
     
     if (skillObj.relationships && skillObj.relationships.skillLevel && skillObj.relationships.skillLevel.data) {
       const skillLevelId = skillObj.relationships.skillLevel.data.id;
-      console.log('Looking for skillLevel:', skillLevelId);
       
       const skillLevel = learnerData.included.find(item => 
         item.type === 'skillLevel' && item.id === skillLevelId
       );
       
-      console.log('Found skillLevel:', skillLevel);
       
       if (skillLevel && skillLevel.relationships && skillLevel.relationships.skill && skillLevel.relationships.skill.data) {
         const skillId = skillLevel.relationships.skill.data.id;
-        console.log('Looking for skill:', skillId);
         
         const skill = learnerData.included.find(item => 
           item.type === 'skill' && item.id === skillId
         );
         
-        console.log('Found skill:', skill);
         
         if (skill && skillLevel && skillObj) {
           const skillName = skill.attributes.name;
           const skillLevelNum = skillLevel.attributes.level;
           const credits = skillObj.attributes.credits;
           
-          console.log(`Adding skill: ${skillName} - Level ${skillLevelNum} (${credits} Credits)`);
           skillsHtml += `${skillName} - Level ${skillLevelNum} (${credits} Credits)<br>`;
         }
       }
     }
   });
   
-  console.log('Final skillsHtml:', skillsHtml);
   return skillsHtml;
 }
 
@@ -120,8 +112,6 @@ function extractEnrollmentData(learnerData) {
   const unenrollmentAllowed = learnerData && learnerData.data && learnerData.data.attributes && learnerData.data.attributes.unenrollmentAllowed 
     ? learnerData.data.attributes.unenrollmentAllowed : false;
   
-  console.log('Current rating from API:', currentRating);
-  console.log('Unenrollment allowed:', unenrollmentAllowed);
   
   // Get module completion data from resource grades
   const resourceGrades = learnerData.included.filter(item => 
@@ -381,7 +371,6 @@ function processLearningProgramData(learnerData) {
 function processLPCourseModules(courseId, learnerData, resourceGrades) {
   // Handle null/undefined learnerData
   if (!learnerData || !learnerData.included) {
-    console.log('No learnerData or included array, returning empty modules');
     return [];
   }
   
@@ -390,7 +379,6 @@ function processLPCourseModules(courseId, learnerData, resourceGrades) {
   );
   
   if (!courseData) {
-    console.log('No courseData found for', courseId);
     return [];
   }
   

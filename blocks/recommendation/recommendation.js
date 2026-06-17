@@ -1,59 +1,16 @@
 import { createOptimizedPicture } from '../../scripts/aem.js';
 import { createFluidicPlayerModal } from '../course-overview/ui-components.js';
 import { getAlmAccessToken } from '../../scripts/alm-token.js';
+import {
+  enrollUser as apiEnrollUser,
+  fetchEnrollmentState,
+  bookmarkLearningObject,
+  fetchLearningObject,
+  fetchRecommendations
+} from '../../scripts/api-service.js';
+import { addManagedListener, cleanupChildren } from '../../scripts/dom-utils.js';
 
 const i18n = window.alm.i18n;
-/**
- * Fetch enrollment state for a learning object
- * @param {string} learningObjectId - Learning object ID
- * @param {string} instanceId - Instance ID
- * @returns {Promise<Object>} - Enrollment state data
- */
-async function fetchEnrollmentState(learningObjectId, instanceId) {
-  try {
-    const accessToken = getAlmAccessToken();
-    if (!accessToken) {
-      console.warn('No access token found');
-      return null;
-    }
-
-    // Extract course ID from learningObjectId (format: course:12511145)
-    const courseId = learningObjectId.split(':')[1];
-
-    // Build enrollment ID (format: course:courseId_instanceId_userId)
-    // We need to get userId from API or session
-    const userId = sessionStorage.getItem('alm_user_id') || '28993374'; // Fallback user ID
-    const enrollmentId = `${learningObjectId}_${instanceId}_${userId}`;
-
-    const apiUrl = `https://learningmanager.adobe.com/primeapi/v2/enrollments/${enrollmentId}?omitDeprecated=true&access_token=${accessToken}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.api+json',
-      },
-    });
-
-    if (!response.ok) {
-      // If 404, user is not enrolled yet
-      if (response.status === 404) {
-        return { state: 'NOT_ENROLLED', progressPercent: 0 };
-      }
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return {
-      state: data.data.attributes.state,
-      progressPercent: data.data.attributes.progressPercent || 0,
-      dateCompleted: data.data.attributes.dateCompleted,
-      hasPassed: data.data.attributes.hasPassed,
-    };
-  } catch (error) {
-    console.error('Error fetching enrollment state:', error);
-    return null;
-  }
-}
 
 /**
  * Determine button text based on enrollment state
@@ -164,7 +121,6 @@ function parseApiResponse(apiResponse) {
     const shortInstanceId = instanceIdParts.length >= 2 ? instanceIdParts[1] : '';
 
     // Determine button text based on enrollment status or other logic
-    // For now, using "EXPLORE" if no duration, "START" otherwise
     const buttonText = attributes.duration === 0 ? i18n.translations['alm.button.explore'] : i18n.translations['alm.button.start'];
 
     // Get rating badge
@@ -190,7 +146,7 @@ function parseApiResponse(apiResponse) {
       duration: formatDuration(attributes.duration),
       label: reason,
       buttonText,
-      buttonLink: '#', // Could be constructed based on loType and ID
+      buttonLink: '#',
       isBookmarked: attributes.isBookmarked || false,
     };
 
@@ -201,58 +157,6 @@ function parseApiResponse(apiResponse) {
 }
 
 /**
- * Fetch recommendations for a specific strip
- * @param {number} stripNumber - Strip number (1-based)
- * @returns {Promise<Object>} - Promise resolving to {skillGroup, stripCount}
- */
-async function fetchRecommendationStrip(stripNumber) {
-  try {
-    const accessToken = getAlmAccessToken();
-
-    if (!accessToken) {
-      console.warn('No access token found in session storage');
-      return null;
-    }
-
-    const apiUrl = `https://learningmanager.adobe.com/primeapi/v2/recommendations?filter.loTypes=course,learningProgram,certification,jobAid&include=learningObject.instances,learningObject.skills.skillLevel.skill&useCache=true&filter.ignoreEnhancedLP=false&enforcedFields[learningObject]=extensionOverrides&filter.recType=multi_skill_interest&strip=${stripNumber}&page[limit]=10&omitDeprecated=true&access_token=${accessToken}`;
-
-    console.log(`Fetching strip ${stripNumber}:`, apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.api+json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const result = parseApiResponse(data);
-    const stripCount = data.meta?.stripCount || 1;
-
-    console.log(`Strip ${stripNumber}: "${result.skillName}", ${result.recommendations.length} recommendations, stripCount: ${stripCount}`);
-
-    if (result.recommendations.length > 0) {
-      return {
-        skillGroup: {
-          skillName: result.skillName,
-          recommendations: result.recommendations,
-        },
-        stripCount,
-      };
-    }
-
-    return { skillGroup: null, stripCount };
-  } catch (error) {
-    console.error(`Error fetching strip ${stripNumber}:`, error);
-    return null;
-  }
-}
-
-/**
  * Creates a "Go To Catalog" card
  * @returns {HTMLElement} - The card element
  */
@@ -260,16 +164,13 @@ function createGoToCatalogCard() {
   const li = document.createElement('li');
   li.className = 'recommendation-card recommendation-card-goto';
 
-  // Card link wrapper
   const link = document.createElement('a');
-  link.href = '/browse-catalog'; // Update this URL as needed
+  link.href = '/browse-catalog';
   link.className = 'recommendation-goto-link';
 
-  // Card body (no image for this card)
   const bodyDiv = document.createElement('div');
   bodyDiv.className = 'recommendation-goto-body';
 
-  // Title
   const title = document.createElement('h3');
   title.className = 'recommendation-goto-title';
   title.textContent = i18n.translations['alm.recommendation.gotocatalog'];
@@ -282,138 +183,12 @@ function createGoToCatalogCard() {
 }
 
 /**
- * Enroll user in a learning object
- * @param {string} learningObjectId - Learning object ID (e.g., "course:12529814")
- * @param {string} instanceId - Instance ID (e.g., "13252082")
- * @returns {Promise<boolean>} - Success status
- */
-async function enrollUser(learningObjectId, instanceId) {
-  try {
-    const accessToken = getAlmAccessToken();
-    if (!accessToken) {
-      console.error('No access token found');
-      return false;
-    }
-
-    // Build the full instance ID format (e.g., "course:12529814_13252082")
-    const loInstanceId = `${learningObjectId}_${instanceId}`;
-
-    const apiUrl = `https://learningmanager.adobe.com/primeapi/v2/enrollments?loId=${learningObjectId}&loInstanceId=${loInstanceId}&omitDeprecated=true&access_token=${accessToken}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/vnd.api+json',
-        'Content-Type': 'application/vnd.api+json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Enrollment failed: ${response.status}`);
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error enrolling user:', error);
-    return false;
-  }
-}
-
-/**
- * Check if learning object is bookmarked
- * @param {string} learningObjectId - Learning object ID
- * @returns {Promise<boolean>} - Whether the LO is bookmarked
- */
-async function checkBookmarkStatus(learningObjectId) {
-  try {
-    const accessToken = getAlmAccessToken();
-    if (!accessToken) {
-      return false;
-    }
-
-    const loDetails = await fetchLearningObjectDetails(learningObjectId);
-    return loDetails?.attributes?.isBookmarked || false;
-  } catch (error) {
-    console.error('Error checking bookmark status:', error);
-    return false;
-  }
-}
-
-/**
- * Save (bookmark) a learning object
- * @param {string} learningObjectId - Learning object ID
- * @returns {Promise<boolean>} - Success status
- */
-async function saveBookmark(learningObjectId) {
-  try {
-    const accessToken = getAlmAccessToken();
-    if (!accessToken) {
-      console.error('No access token found');
-      return false;
-    }
-
-    const apiUrl = `https://learningmanager.adobe.com/primeapi/v2/learningObjects/${learningObjectId}/bookmark?omitDeprecated=true&access_token=${accessToken}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/vnd.api+json',
-        'Content-Type': 'application/vnd.api+json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Save bookmark failed: ${response.status}`);
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error saving bookmark:', error);
-    return false;
-  }
-}
-
-/**
- * Unsave (remove bookmark) a learning object
- * @param {string} learningObjectId - Learning object ID
- * @returns {Promise<boolean>} - Success status
- */
-async function unsaveBookmark(learningObjectId) {
-  try {
-    const accessToken = getAlmAccessToken();
-    if (!accessToken) {
-      console.error('No access token found');
-      return false;
-    }
-
-    const apiUrl = `https://learningmanager.adobe.com/primeapi/v2/learningObjects/${learningObjectId}/bookmark?omitDeprecated=true&access_token=${accessToken}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'DELETE',
-      headers: {
-        Accept: 'application/vnd.api+json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Unsave bookmark failed: ${response.status}`);
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error unsaving bookmark:', error);
-    return false;
-  }
-}
-
-/**
  * Update add button icon based on enrollment state
  * @param {HTMLElement} button - Add button element
  * @param {boolean} isEnrolled - Whether user is enrolled
  */
 function updateAddButtonIcon(button, isEnrolled) {
   if (isEnrolled) {
-    // Show checkmark icon
     button.innerHTML = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10" stroke="#0D66D0" stroke-width="2" fill="#0D66D0"/>
@@ -424,7 +199,6 @@ function updateAddButtonIcon(button, isEnrolled) {
     button.style.opacity = '0.7';
     button.style.cursor = 'default';
   } else {
-    // Show plus icon
     button.innerHTML = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10" stroke="#0D66D0" stroke-width="2"/>
@@ -454,40 +228,6 @@ function showAddButtonSpinner(button) {
 }
 
 /**
- * Fetch learning object details including rating
- * @param {string} learningObjectId - Learning object ID
- * @returns {Promise<Object>} - Learning object data
- */
-async function fetchLearningObjectDetails(learningObjectId) {
-  try {
-    const accessToken = getAlmAccessToken();
-    if (!accessToken) {
-      console.warn('No access token found');
-      return null;
-    }
-
-    const apiUrl = `https://learningmanager.adobe.com/primeapi/v2/learningObjects/${learningObjectId}?include=instances&omitDeprecated=true&access_token=${accessToken}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.api+json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.data;
-  } catch (error) {
-    console.error('Error fetching learning object details:', error);
-    return null;
-  }
-}
-
-/**
  * Update rating badge on a card
  * @param {HTMLElement} card - The card element
  * @param {Object} ratingData - Rating data {rating, ratingsCount}
@@ -498,19 +238,15 @@ function updateCardRating(card, ratingData) {
 
   const hasRating = ratingData.ratingsCount > 0;
 
-  // Clear existing content
   badgeElement.className = 'recommendation-badge';
   badgeElement.innerHTML = '';
 
   if (hasRating) {
-    // Show stars
     badgeElement.classList.add('has-rating');
 
-    // Create stars container
     const starsContainer = document.createElement('div');
     starsContainer.className = 'recommendation-stars';
 
-    // Create 5 stars
     const ratingValue = Math.round(ratingData.rating);
     for (let i = 1; i <= 5; i += 1) {
       const star = document.createElement('span');
@@ -524,13 +260,11 @@ function updateCardRating(card, ratingData) {
 
     badgeElement.appendChild(starsContainer);
 
-    // Add rating count
     const ratingCount = document.createElement('span');
     ratingCount.className = 'recommendation-rating-count';
     ratingCount.textContent = ratingData.ratingsCount;
     badgeElement.appendChild(ratingCount);
   } else {
-    // Show NR
     badgeElement.textContent = 'NR';
   }
 }
@@ -559,11 +293,9 @@ async function updateButtonState(button, learningObjectId, instanceId) {
  * @param {string} instanceId - Instance ID
  */
 async function updateCardAfterPlayer(card, button, learningObjectId, instanceId) {
-  // Update button state
   await updateButtonState(button, learningObjectId, instanceId);
 
-  // Fetch and update rating
-  const loDetails = await fetchLearningObjectDetails(learningObjectId);
+  const loDetails = await fetchLearningObject(learningObjectId);
   if (loDetails && loDetails.attributes && loDetails.attributes.rating) {
     const rating = loDetails.attributes.rating.averageRating || 0;
     const ratingsCount = loDetails.attributes.rating.ratingsCount || 0;
@@ -578,36 +310,31 @@ async function updateCardAfterPlayer(card, button, learningObjectId, instanceId)
  * @param {boolean} isBookmarked - Current bookmark status
  */
 function showBookmarkOverlay(card, learningObjectId, isBookmarked) {
-  // Remove any existing overlay
   const existingOverlay = document.querySelector('.bookmark-overlay');
   if (existingOverlay) {
     existingOverlay.remove();
   }
 
-  // Create overlay
   const overlay = document.createElement('div');
   overlay.className = 'bookmark-overlay';
 
-  // Create overlay content
   const overlayContent = document.createElement('div');
   overlayContent.className = 'bookmark-overlay-content';
 
-  // Close button
   const closeButton = document.createElement('button');
   closeButton.className = 'bookmark-overlay-close';
   closeButton.setAttribute('aria-label', 'Close');
   closeButton.innerHTML = '✕';
-  closeButton.addEventListener('click', () => {
+  addManagedListener(closeButton, 'click', () => {
     overlay.remove();
   });
 
-  // Save/Unsave button
   const bookmarkButton = document.createElement('button');
   bookmarkButton.className = 'bookmark-button';
 
   const bookmarkIcon = document.createElement('span');
   bookmarkIcon.className = 'bookmark-icon';
-  bookmarkIcon.innerHTML = isBookmarked ? '🔖' : '🔖';
+  bookmarkIcon.innerHTML = '🔖';
 
   const bookmarkText = document.createElement('span');
   bookmarkText.className = 'bookmark-text';
@@ -616,12 +343,9 @@ function showBookmarkOverlay(card, learningObjectId, isBookmarked) {
   bookmarkButton.appendChild(bookmarkIcon);
   bookmarkButton.appendChild(bookmarkText);
 
-  // Handle bookmark click
-  bookmarkButton.addEventListener('click', async (e) => {
-    // Prevent event from propagating to close overlay
+  addManagedListener(bookmarkButton, 'click', async (e) => {
     e.stopPropagation();
 
-    // Disable button and show spinner
     bookmarkButton.disabled = true;
     const originalContent = bookmarkButton.innerHTML;
     bookmarkButton.innerHTML = `
@@ -634,15 +358,11 @@ function showBookmarkOverlay(card, learningObjectId, isBookmarked) {
       <span style="margin-left: 8px;">Loading...</span>
     `;
 
-    const success = isBookmarked
-      ? await unsaveBookmark(learningObjectId)
-      : await saveBookmark(learningObjectId);
+    const success = await bookmarkLearningObject(learningObjectId, !isBookmarked);
 
     if (success) {
-      // Update button state
       isBookmarked = !isBookmarked;
 
-      // Update button content
       bookmarkButton.innerHTML = '';
       const newIcon = document.createElement('span');
       newIcon.className = 'bookmark-icon';
@@ -654,13 +374,11 @@ function showBookmarkOverlay(card, learningObjectId, isBookmarked) {
       bookmarkButton.appendChild(newText);
       bookmarkButton.disabled = false;
 
-      // Update the more options button data attribute
       const moreOptionsBtn = card.querySelector('.more-options');
       if (moreOptionsBtn) {
         moreOptionsBtn.dataset.isBookmarked = isBookmarked;
       }
     } else {
-      // Restore original content on error
       bookmarkButton.innerHTML = originalContent;
       bookmarkButton.disabled = false;
       alert(`Failed to ${isBookmarked ? 'unsave' : 'save'} the course. Please try again.`);
@@ -671,23 +389,21 @@ function showBookmarkOverlay(card, learningObjectId, isBookmarked) {
   overlayContent.appendChild(bookmarkButton);
   overlay.appendChild(overlayContent);
 
-  // Prevent clicks inside overlay from bubbling
-  overlayContent.addEventListener('click', (e) => {
+  addManagedListener(overlayContent, 'click', (e) => {
     e.stopPropagation();
   });
 
-  // Position overlay relative to card
   card.style.position = 'relative';
   card.appendChild(overlay);
 
-  // Close overlay when clicking outside
   setTimeout(() => {
-    document.addEventListener('click', function closeOverlay(e) {
+    function closeOverlay(e) {
       if (!overlayContent.contains(e.target) && !e.target.closest('.more-options')) {
         overlay.remove();
         document.removeEventListener('click', closeOverlay);
       }
-    });
+    }
+    addManagedListener(document, 'click', closeOverlay);
   }, 0);
 }
 
@@ -706,12 +422,10 @@ async function updateCardState(actionButton, addButton, learningObjectId, instan
   const isEnrolled = enrollmentState && enrollmentState.state !== 'NOT_ENROLLED';
 
   if (enrollmentState) {
-    // Update action button text
     const newButtonText = getButtonText(enrollmentState);
     actionButton.textContent = newButtonText;
   }
 
-  // Update add button icon
   updateAddButtonIcon(addButton, isEnrolled);
 
   return isEnrolled;
@@ -727,7 +441,6 @@ function createRecommendationCard(cardData, refreshCallback) {
   const li = document.createElement('li');
   li.className = 'recommendation-card';
 
-  // Card image
   const cardImage = document.createElement('div');
   cardImage.className = 'card-image';
 
@@ -735,27 +448,22 @@ function createRecommendationCard(cardData, refreshCallback) {
     const picture = createOptimizedPicture(cardData.image, cardData.imageAlt, false, [{ width: '400' }]);
     cardImage.appendChild(picture);
   } else {
-    // Placeholder if no image
     const img = document.createElement('img');
     img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="250"%3E%3Crect width="400" height="250" fill="%23e8e8e8"/%3E%3C/svg%3E';
     img.alt = cardData.imageAlt;
     cardImage.appendChild(img);
   }
 
-  // Badge (NR - Not Rated or star rating)
   const badge = document.createElement('div');
   badge.className = 'recommendation-badge';
 
   if (cardData.badge && cardData.badge.type === 'stars') {
-    // Has rating - show stars
     badge.classList.add('has-rating');
 
-    // Create stars container
     const starsContainer = document.createElement('div');
     starsContainer.className = 'recommendation-stars';
 
-    // Create 5 stars
-    const ratingValue = Math.round(cardData.badge.rating); // Round to nearest whole number
+    const ratingValue = Math.round(cardData.badge.rating);
     for (let i = 1; i <= 5; i += 1) {
       const star = document.createElement('span');
       star.className = 'recommendation-star';
@@ -768,23 +476,19 @@ function createRecommendationCard(cardData, refreshCallback) {
 
     badge.appendChild(starsContainer);
 
-    // Add rating count
     const ratingCount = document.createElement('span');
     ratingCount.className = 'recommendation-rating-count';
     ratingCount.textContent = cardData.badge.ratingsCount;
     badge.appendChild(ratingCount);
   } else {
-    // No rating - show NR
     badge.textContent = 'NR';
   }
 
   cardImage.appendChild(badge);
 
-  // Card content
   const cardContent = document.createElement('div');
   cardContent.className = 'card-content';
 
-  // Title row with add button
   const titleRow = document.createElement('div');
   titleRow.className = 'card-title-row';
 
@@ -804,8 +508,7 @@ function createRecommendationCard(cardData, refreshCallback) {
     </svg>
   `;
 
-  // Add click handler for enrollment
-  addButton.addEventListener('click', async (e) => {
+  addManagedListener(addButton, 'click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -816,21 +519,14 @@ function createRecommendationCard(cardData, refreshCallback) {
       return;
     }
 
-    console.log('Enrolling in:', learningObjectId);
-
-    // Show spinner
     showAddButtonSpinner(addButton);
 
-    // Enroll user
-    const success = await enrollUser(learningObjectId, instanceId);
+    const success = await apiEnrollUser(learningObjectId, instanceId);
 
     if (success) {
-      console.log('Enrollment successful');
-      // Update both buttons to reflect enrolled state
       await updateCardState(actionButton, addButton, learningObjectId, instanceId);
     } else {
       console.error('Enrollment failed');
-      // Revert to plus icon
       updateAddButtonIcon(addButton, false);
       alert('Failed to enroll in the course. Please try again.');
     }
@@ -839,7 +535,6 @@ function createRecommendationCard(cardData, refreshCallback) {
   titleRow.appendChild(titleElement);
   titleRow.appendChild(addButton);
 
-  // Metadata
   const cardMeta = document.createElement('div');
   cardMeta.className = 'card-meta';
 
@@ -856,12 +551,10 @@ function createRecommendationCard(cardData, refreshCallback) {
 
   cardMeta.innerHTML = metaParts.join('<span class="separator">•</span>');
 
-  // Label
   const cardLabel = document.createElement('p');
   cardLabel.className = 'card-label';
   cardLabel.textContent = cardData.label;
 
-  // Actions
   const cardActions = document.createElement('div');
   cardActions.className = 'card-actions';
 
@@ -871,8 +564,7 @@ function createRecommendationCard(cardData, refreshCallback) {
   actionButton.dataset.learningObjectId = cardData.id;
   actionButton.dataset.instanceId = cardData.instanceId;
 
-  // Add click handler for launching fluidic player
-  actionButton.addEventListener('click', async (e) => {
+  addManagedListener(actionButton, 'click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -890,48 +582,30 @@ function createRecommendationCard(cardData, refreshCallback) {
       return;
     }
 
-    // Check enrollment status first
     const enrollmentState = await fetchEnrollmentState(learningObjectId, instanceId);
     const isEnrolled = enrollmentState && enrollmentState.state !== 'NOT_ENROLLED';
 
-    // If not enrolled, enroll first
     if (!isEnrolled) {
-      console.log('User not enrolled, enrolling first...');
-
-      // Show spinner on add button
       showAddButtonSpinner(addButton);
 
-      // Enroll user
-      const enrollmentSuccess = await enrollUser(learningObjectId, instanceId);
+      const enrollmentSuccess = await apiEnrollUser(learningObjectId, instanceId);
 
       if (!enrollmentSuccess) {
         console.error('Enrollment failed');
-        // Revert add button to plus icon
         updateAddButtonIcon(addButton, false);
         alert('Failed to enroll in the course. Please try again.');
         return;
       }
 
-      console.log('Enrollment successful');
-      // Update add button to checkmark
       updateAddButtonIcon(addButton, true);
-      // Update action button text
       actionButton.textContent = 'CONTINUE';
     }
 
-    console.log('Launching fluidic player for:', learningObjectId);
-
-    // Build fluidic player URL
     const playerUrl = `https://learningmanager.adobe.com/app/player?lo_id=${learningObjectId}&access_token=${accessToken}&hostname=https://learningmanager.adobe.com&trapfocus=true`;
 
-    // Launch fluidic player modal with refresh callback
     createFluidicPlayerModal(playerUrl, async () => {
-      console.log('Fluidic player closed, updating card state and rating...');
-
-      // Update both button state and rating after player closes
       await updateCardAfterPlayer(li, actionButton, learningObjectId, instanceId);
 
-      // Call the main refresh callback if provided
       if (refreshCallback && typeof refreshCallback === 'function') {
         refreshCallback();
       }
@@ -945,27 +619,23 @@ function createRecommendationCard(cardData, refreshCallback) {
   moreOptions.dataset.learningObjectId = cardData.id;
   moreOptions.dataset.isBookmarked = cardData.isBookmarked;
 
-  // Add click handler for more options
-  moreOptions.addEventListener('click', (e) => {
+  addManagedListener(moreOptions, 'click', (e) => {
     e.preventDefault();
     e.stopPropagation();
 
     const { learningObjectId, isBookmarked } = moreOptions.dataset;
 
-    // Show overlay with stored bookmark status
     showBookmarkOverlay(li, learningObjectId, isBookmarked === 'true');
   });
 
   cardActions.appendChild(actionButton);
   cardActions.appendChild(moreOptions);
 
-  // Assemble content
   cardContent.appendChild(titleRow);
   cardContent.appendChild(cardMeta);
   cardContent.appendChild(cardLabel);
   cardContent.appendChild(cardActions);
 
-  // Assemble card
   li.appendChild(cardImage);
   li.appendChild(cardContent);
 
@@ -984,7 +654,6 @@ function createSkillSection(skillGroup, isFirst = false) {
 
   const { skillName, recommendations } = skillGroup;
 
-  // Create header with title and navigation
   const header = document.createElement('div');
   header.className = 'recommendations-header';
 
@@ -1007,18 +676,14 @@ function createSkillSection(skillGroup, isFirst = false) {
   navigationArrows.appendChild(nextArrow);
   header.appendChild(navigationArrows);
 
-  // Create scroll container
   const scrollContainer = document.createElement('div');
   scrollContainer.className = 'recommendations-scroll-container';
 
-  // Create recommendations grid
   const grid = document.createElement('div');
   grid.className = 'recommendations-grid';
 
-  // Store buttons for initial state updates
   const cardButtons = [];
 
-  // Add recommendation cards
   recommendations.forEach((recommendation) => {
     const { card, actionButton } = createRecommendationCard(recommendation);
     grid.appendChild(card);
@@ -1033,22 +698,18 @@ function createSkillSection(skillGroup, isFirst = false) {
     });
   });
 
-  // Add "Go To Catalog" card
   const goToCatalogCard = createGoToCatalogCard();
   grid.appendChild(goToCatalogCard);
 
-  // Fetch and update initial button states
   cardButtons.forEach(async ({ actionButton, addButton, learningObjectId, instanceId }) => {
     await updateCardState(actionButton, addButton, learningObjectId, instanceId);
   });
 
   scrollContainer.appendChild(grid);
 
-  // Assemble section
   section.appendChild(header);
   section.appendChild(scrollContainer);
 
-  // Set up scroll navigation
   const cardsPerPage = 3;
   const cardWidth = 400 + 24;
   const pageWidth = cardWidth * cardsPerPage;
@@ -1071,19 +732,19 @@ function createSkillSection(skillGroup, isFirst = false) {
     updatePaginationButtons();
   };
 
-  prevArrow.addEventListener('click', () => {
+  addManagedListener(prevArrow, 'click', () => {
     if (currentPage > 0) {
       scrollToPage(currentPage - 1);
     }
   });
 
-  nextArrow.addEventListener('click', () => {
+  addManagedListener(nextArrow, 'click', () => {
     if (currentPage < totalPages - 1) {
       scrollToPage(currentPage + 1);
     }
   });
 
-  scrollContainer.addEventListener('scroll', () => {
+  addManagedListener(scrollContainer, 'scroll', () => {
     const { scrollLeft } = scrollContainer;
     const newPage = Math.round(scrollLeft / pageWidth);
     if (newPage !== currentPage) {
@@ -1101,50 +762,43 @@ function createSkillSection(skillGroup, isFirst = false) {
  * Main decoration function
  */
 export default async function decorate(block) {
-  // Show loading state
   block.innerHTML = '<div class="loading-state">Loading recommendations...</div>';
 
-  // Try to find the first strip with data
   let firstValidStrip = null;
   let firstValidStripNumber = 0;
   let totalStripCount = 1;
 
-  // Try fetching strips sequentially until we find one with data or hit a reasonable limit
-  const maxStripsToCheck = 10; // Safety limit
+  const maxStripsToCheck = 10;
 
   for (let i = 1; i <= maxStripsToCheck; i++) {
-    console.log(`Checking strip ${i}...`);
-    const stripData = await fetchRecommendationStrip(i);
+    try {
+      const data = await fetchRecommendations(i, 10);
+      
+      if (data.meta?.stripCount) {
+        totalStripCount = data.meta.stripCount;
+      }
 
-    if (!stripData) {
-      // API error, stop checking
-      console.log(`Strip ${i} returned error, stopping`);
-      break;
-    }
+      const result = parseApiResponse(data);
 
-    // Update stripCount from the response (should be same for all strips)
-    if (stripData.stripCount) {
-      totalStripCount = stripData.stripCount;
-    }
-
-    if (stripData.skillGroup) {
-      // Found a strip with data
-      firstValidStrip = stripData;
-      firstValidStripNumber = i;
-      console.log(`Found data in strip ${i}, stripCount: ${totalStripCount}`);
-      break;
-    } else {
-      console.log(`Strip ${i} is empty, continuing...`);
-
-      // If we've checked all strips based on stripCount, stop
-      if (totalStripCount > 1 && i >= totalStripCount) {
-        console.log(`Checked all ${totalStripCount} strips, none have data`);
+      if (result.recommendations.length > 0) {
+        firstValidStrip = {
+          skillGroup: {
+            skillName: result.skillName,
+            recommendations: result.recommendations,
+          },
+          stripCount: totalStripCount,
+        };
+        firstValidStripNumber = i;
+        break;
+      } else if (totalStripCount > 1 && i >= totalStripCount) {
         break;
       }
+    } catch (error) {
+      console.error(`Error fetching strip ${i}:`, error);
+      break;
     }
   }
 
-  // Clear the block
   block.innerHTML = '';
 
   if (!firstValidStrip?.skillGroup) {
@@ -1152,52 +806,54 @@ export default async function decorate(block) {
     return;
   }
 
-  // Create main container
   const container = document.createElement('div');
   container.className = 'recommendations-container';
 
-  // Add first valid skill section
   const firstSection = createSkillSection(firstValidStrip.skillGroup, true);
   container.appendChild(firstSection);
 
-  // Calculate remaining strips (excluding the one we already displayed)
   const remainingStripsCount = totalStripCount - firstValidStripNumber;
 
-  // Add Show more button if there are more strips
   if (remainingStripsCount > 0) {
     const showMoreButton = document.createElement('button');
     showMoreButton.className = 'show-more-button';
     showMoreButton.textContent = i18n.translations['alm.recommendation.showmore'];
 
-    showMoreButton.addEventListener('click', async () => {
-      // Disable button and show loading state
+    addManagedListener(showMoreButton, 'click', async () => {
       showMoreButton.disabled = true;
       showMoreButton.textContent = i18n.translations['alm.recommendation.loading'] + '...';
 
-      // Fetch remaining strips (all strips after the first valid one)
       const stripPromises = [];
       for (let i = firstValidStripNumber + 1; i <= totalStripCount; i++) {
-        stripPromises.push(fetchRecommendationStrip(i));
+        stripPromises.push(fetchRecommendations(i, 10).then(data => ({
+          data,
+          result: parseApiResponse(data)
+        })).catch(err => {
+          console.error(`Error fetching strip ${i}:`, err);
+          return null;
+        }));
       }
 
       const remainingStrips = await Promise.all(stripPromises);
 
-      // Add sections for remaining strips (only those with data)
-      remainingStrips.forEach((stripData) => {
-        if (stripData && stripData.skillGroup) {
-          const section = createSkillSection(stripData.skillGroup, true);
-          // Insert before the button
+      remainingStrips.forEach((stripResult) => {
+        if (stripResult && stripResult.result && stripResult.result.recommendations.length > 0) {
+          const section = createSkillSection({
+            skillName: stripResult.result.skillName,
+            recommendations: stripResult.result.recommendations,
+          }, true);
           container.insertBefore(section, showMoreButton);
         }
       });
 
-      // Remove the Show more button
       showMoreButton.remove();
     });
 
     container.appendChild(showMoreButton);
   }
 
-  // Replace block content
   block.appendChild(container);
+  
+  // Return cleanup function
+  return () => cleanupChildren(block);
 }

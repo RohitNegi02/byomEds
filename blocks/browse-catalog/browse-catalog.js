@@ -442,7 +442,6 @@ function createCourseCard(item, includedData = []) {
   
   // Add click handler
   card.addEventListener('click', () => {
-    console.log('Learning object clicked:', item.id, 'Type:', attributes.loType);
     
     let trainingId;
     let instanceId;
@@ -476,7 +475,6 @@ function createCourseCard(item, includedData = []) {
     // Construct the overview URL with proper path format
     const overviewUrl = `/overview/trainingId/${trainingId}/trainingInstanceId/${instanceId}`;
     
-    console.log('Navigating to:', overviewUrl);
     
     // Navigate to the overview page
     window.location.href = overviewUrl;
@@ -766,7 +764,6 @@ export default async function decorate(block) {
       
       // Update course count if available
       if (data.meta && data.meta.count) {
-        console.log(`Loaded ${allCourses.length} of ${data.meta.count} total courses`);
       }
       
       isLoading = false;
@@ -1030,7 +1027,6 @@ export default async function decorate(block) {
   const filterCheckboxes = sidebar.querySelectorAll('input[type="checkbox"]');
   filterCheckboxes.forEach(checkbox => {
     checkbox.addEventListener('change', async () => {
-      console.log('Filter changed:', checkbox.id, checkbox.checked);
       
       // Server-side filters that require API reload
       if (['courses', 'learning-paths', 'job-aids', 'certifications'].includes(checkbox.id) ||

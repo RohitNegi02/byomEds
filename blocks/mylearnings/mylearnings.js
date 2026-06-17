@@ -1,6 +1,8 @@
 import { createOptimizedPicture } from '../../scripts/aem.js';
 import { createFluidicPlayerModal } from '../course-overview/ui-components.js';
 import { getAlmAccessToken } from '../../scripts/alm-token.js';
+import { fetchEnrolledLearningObjects } from '../../scripts/api-service.js';
+import { addManagedListener, cleanupChildren } from '../../scripts/dom-utils.js';
 
 const i18n = window.alm.i18n;
 /**
@@ -128,30 +130,8 @@ function transformLearningObjectToCard(learningObject, included) {
  */
 async function fetchLearningObjects() {
   try {
-    // Get access token from session storage
-    const accessToken = getAlmAccessToken();
-
-    if (!accessToken) {
-      console.warn('No access token found in session storage');
-      return [];
-    }
-
-    // Build API URL - limit to 5 results
-    const apiUrl = `https://learningmanager.adobe.com/primeapi/v2/learningObjects?filter.loTypes=course,learningProgram,certification,jobAid&include=enrollment.loInstance,skills.skillLevel.skill,instances.enrollment&useCache=true&filter.ignoreEnhancedLP=false&enforcedFields[learningObject]=extensionOverrides&filter.learnerState=enrolled,started&sort=-dateEnrolled&page[limit]=5&omitDeprecated=true&access_token=${accessToken}`;
-
-    // Fetch data
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/vnd.api+json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
+    // Use centralized API service
+    const data = await fetchEnrolledLearningObjects(5);
 
     // Transform learning objects to card data
     const cards = data.data.map(learningObject =>
@@ -300,7 +280,7 @@ function createCard(cardData) {
   const continueBtn = document.createElement('button');
   continueBtn.className = 'mylearning-continue-btn';
   continueBtn.textContent = i18n.translations['alm.mylearning.continue'];
-  continueBtn.addEventListener('click', (e) => {
+  addManagedListener(continueBtn, 'click', (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -315,8 +295,6 @@ function createCard(cardData) {
 
     // Build fluidic player URL
     const playerUrl = `https://learningmanager.adobe.com/app/player?lo_id=${cardData.learningObjectId}&access_token=${accessToken}&hostname=https://learningmanager.adobe.com&trapfocus=true`;
-
-    console.log('Launching player for:', cardData.title, cardData.learningObjectId);
 
     // Launch fluidic player modal with refresh callback
     createFluidicPlayerModal(playerUrl, cardData.onRefresh);
@@ -398,7 +376,6 @@ export default async function decorate(block) {
 
   // Define refresh callback function
   const refreshBlock = async () => {
-    console.log('Refreshing myLearning block...');
     // Re-fetch and re-render the block
     await decorate(block);
   };
@@ -444,20 +421,20 @@ export default async function decorate(block) {
     nextBtn.disabled = currentPage >= totalPages - 1;
   };
 
-  prevBtn.addEventListener('click', () => {
+  addManagedListener(prevBtn, 'click', () => {
     if (currentPage > 0) {
       scrollToPage(currentPage - 1);
     }
   });
 
-  nextBtn.addEventListener('click', () => {
+  addManagedListener(nextBtn, 'click', () => {
     if (currentPage < totalPages - 1) {
       scrollToPage(currentPage + 1);
     }
   });
 
   // Update current page based on scroll position
-  scrollContainer.addEventListener('scroll', () => {
+  addManagedListener(scrollContainer, 'scroll', () => {
     const scrollLeft = scrollContainer.scrollLeft;
     const newPage = Math.round(scrollLeft / pageWidth);
     if (newPage !== currentPage) {
@@ -470,7 +447,10 @@ export default async function decorate(block) {
   updatePaginationButtons();
 
   // Update on resize
-  window.addEventListener('resize', () => {
+  addManagedListener(window, 'resize', () => {
     updatePaginationButtons();
   });
+  
+  // Return cleanup function
+  return () => cleanupChildren(block);
 }

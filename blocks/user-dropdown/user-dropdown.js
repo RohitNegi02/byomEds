@@ -1,39 +1,12 @@
 // User Dropdown Block - Displays user profile dropdown in header
-import { getAccessToken } from '../course-overview/api-service.js';
-import { almApiCall } from '../../scripts/alm-token.js';
-
-// Fetch user profile for dropdown
-async function fetchUserProfile() {
-  try {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-      return null;
-    }
-
-    const response = await almApiCall(`https://learningmanager.adobe.com/primeapi/v2/user`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/vnd.api+json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching user profile for dropdown:', error);
-    return null;
-  }
-}
+import { fetchUserProfile } from '../../scripts/api-service.js';
+import { addManagedListener, cleanupChildren } from '../../scripts/dom-utils.js';
 
 // Generate user dropdown HTML
 function generateUserDropdownHTML(userProfile) {
-  const user = userProfile?.data;
-  const userName = user?.attributes?.name || 'User';
-  const userAvatar = user?.attributes?.avatarUrl || '';
+  const user = userProfile?.attributes;
+  const userName = user?.name || 'User';
+  const userAvatar = user?.avatarUrl || '';
 
   return `
     <div class="user-dropdown-container">
@@ -67,7 +40,7 @@ function generateUserDropdownHTML(userProfile) {
   `;
 }
 
-// Setup dropdown event listeners
+// Setup dropdown event listeners with proper cleanup
 function setupDropdownEventListeners(block) {
   const dropdownBtn = block.querySelector('.user-profile-btn');
   const dropdownMenu = block.querySelector('.user-dropdown-menu');
@@ -75,7 +48,7 @@ function setupDropdownEventListeners(block) {
   if (!dropdownBtn || !dropdownMenu) return;
 
   // Add click handler for dropdown toggle
-  dropdownBtn.addEventListener('click', (e) => {
+  addManagedListener(dropdownBtn, 'click', (e) => {
     e.stopPropagation();
     const isExpanded = dropdownBtn.getAttribute('aria-expanded') === 'true';
     dropdownBtn.setAttribute('aria-expanded', !isExpanded);
@@ -98,27 +71,20 @@ function setupDropdownEventListeners(block) {
     }
   };
 
-  // Add event listeners
-  document.addEventListener('click', closeDropdown);
-  document.addEventListener('keydown', handleKeydown);
-
-  // Store cleanup function for potential future use
-  block.cleanup = () => {
-    document.removeEventListener('click', closeDropdown);
-    document.removeEventListener('keydown', handleKeydown);
-  };
+  // Add event listeners with cleanup
+  addManagedListener(document, 'click', closeDropdown);
+  addManagedListener(document, 'keydown', handleKeydown);
 }
 
 // Main decorate function
 export default async function decorate(block) {
   try {
-    console.log('=== USER DROPDOWN BLOCK DECORATE FUNCTION STARTED ===');
-
     // Show loading state
     block.innerHTML = '<div class="user-dropdown-loading">Loading...</div>';
 
-    // Fetch user profile
+    // Fetch user profile using centralized API service
     const userProfile = await fetchUserProfile();
+    
     if (!userProfile) {
       // Hide the block if no user profile is available
       block.style.display = 'none';
@@ -132,11 +98,12 @@ export default async function decorate(block) {
     // Setup event listeners
     setupDropdownEventListeners(block);
 
-    console.log('User dropdown block initialized successfully');
-
   } catch (error) {
     console.error('Error initializing user dropdown block:', error);
     // Hide the block on error
     block.style.display = 'none';
   }
+  
+  // Return cleanup function
+  return () => cleanupChildren(block);
 }

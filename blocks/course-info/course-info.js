@@ -70,7 +70,6 @@ function createCourseInfoContent(courseData) {
  */
 function handleEnrollClick(courseId) {
   // You can customize this to integrate with your enrollment system
-  console.log('Enroll clicked for course:', courseId);
   
   // Example: Redirect to enrollment page
   // window.location.href = `/enroll?courseId=${encodeURIComponent(courseId)}`;
@@ -88,7 +87,6 @@ function handleEnrollClick(courseId) {
  */
 function handleViewDetailsClick(courseId) {
   // You can customize this to show course details
-  console.log('View details clicked for course:', courseId);
   
   // Example: Redirect to course details page
   // window.location.href = `/course-details?courseId=${encodeURIComponent(courseId)}`;
@@ -147,7 +145,6 @@ export default function decorate(block) {
   }
   
   // Log course data for debugging
-  console.log('Course Info Block - Course data loaded:', courseData);
   
   // Create and insert course info content
   block.innerHTML = createCourseInfoContent(courseData);
@@ -159,5 +156,4 @@ export default function decorate(block) {
   window.handleEnrollClick = handleEnrollClick;
   window.handleViewDetailsClick = handleViewDetailsClick;
   
-  console.log('Course Info Block decorated successfully');
 }

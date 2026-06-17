@@ -5,6 +5,7 @@ import { getAccessToken } from './api-service.js';
 import { enrollUser, unenrollUser, bookmarkCourse, rateCourse, fetchLearnerCourseData, fetchCourseNotes } from './api-service.js';
 import { createFluidicPlayerModal } from './ui-components.js';
 import { generateNotesHTML } from './html-generator.js';
+import { addManagedListener } from '../../scripts/dom-utils.js';
 
 // Handle enrollment/continue button click
 async function handleEnrollmentAction(courseId) {
@@ -23,13 +24,11 @@ async function handleEnrollmentAction(courseId) {
           // Get the first (default) instance ID - this will be the full ID like:
           // "course:12495374_13216648" or "learningProgram:121645_174581"
           instanceId = instances[0].id;
-          console.log('Found instance ID from API data:', instanceId);
         }
       }
       
       // If no instance found, enrollUser will construct a default one
       // Enroll the user
-      console.log('Enrolling user in:', courseId, 'instance:', instanceId);
       const enrollResult = await enrollUser(courseId, instanceId);
       
       if (enrollResult) {
@@ -41,7 +40,6 @@ async function handleEnrollmentAction(courseId) {
       }
     } else {
       // Launch the course player
-      console.log('Launching course player for:', courseId);
       const accessToken = getAccessToken();
       const baseUrl = 'https://learningmanager.adobe.com';
       const playerUrl = `${baseUrl}/app/player?lo_id=${courseId}&access_token=${accessToken}`;
@@ -56,7 +54,6 @@ async function handleEnrollmentAction(courseId) {
 
 // Handle save/bookmark button click
 async function handleSaveAction(courseId) {
-  console.log('Save button clicked for course:', courseId);
   
   const bookmarkResult = await bookmarkCourse(courseId);
   
@@ -74,7 +71,6 @@ async function handleUnenrollAction(enrollmentId) {
     return;
   }
   
-  console.log('Unenrolling from course with enrollmentId:', enrollmentId);
   const unenrollResult = await unenrollUser(enrollmentId);
   
   if (unenrollResult) {
@@ -102,7 +98,6 @@ async function handleRatingSubmission(enrollmentId, stars, ratingSection) {
     return;
   }
   
-  console.log('Submitting rating:', selectedRating, 'for enrollment:', enrollmentId);
   const ratingResult = await rateCourse(enrollmentId, selectedRating);
   
   if (ratingResult) {
@@ -178,7 +173,6 @@ function handleStarClick(stars, clickedIndex) {
 
 // Handle module click
 async function handleModuleClick(resourceId, courseId, learnerData) {
-  console.log('Module clicked:', { resourceId, courseId });
   
   const isEnrolled = learnerData && learnerData.data && 
                     learnerData.data.relationships && 
@@ -201,7 +195,7 @@ function setupEventListeners(block, courseId, learnerData) {
   // Add event listeners for the enrollment/continue button
   const enrollBtn = block.querySelector('.enroll-btn');
   if (enrollBtn) {
-    enrollBtn.addEventListener('click', async (e) => {
+    addManagedListener(enrollBtn, 'click', async (e) => {
       e.preventDefault();
       await handleEnrollmentAction(courseId);
     });
@@ -210,9 +204,8 @@ function setupEventListeners(block, courseId, learnerData) {
   // Add event listener for start button (for enrolled users)
   const startBtn = block.querySelector('.start-btn');
   if (startBtn) {
-    startBtn.addEventListener('click', async (e) => {
+    addManagedListener(startBtn, 'click', async (e) => {
       e.preventDefault();
-      console.log('Start button clicked, launching player for:', courseId);
       const accessToken = getAccessToken();
       const baseUrl = 'https://learningmanager.adobe.com';
       const playerUrl = `${baseUrl}/app/player?lo_id=${courseId}&access_token=${accessToken}`;
@@ -223,7 +216,7 @@ function setupEventListeners(block, courseId, learnerData) {
   // Add event listener for save button
   const saveBtn = block.querySelector('.save-btn');
   if (saveBtn && !saveBtn.classList.contains('disabled')) {
-    saveBtn.addEventListener('click', async (e) => {
+    addManagedListener(saveBtn, 'click', async (e) => {
       e.preventDefault();
       await handleSaveAction(courseId);
     });
@@ -235,12 +228,10 @@ function setupEventListeners(block, courseId, learnerData) {
     // Use the enrollment ID as-is from the API (format: course:courseId_instanceId_userId)
     const enrollmentId = learnerData.data.relationships.enrollment.data.id;
     
-    console.log('Enrollment ID for unenroll:', enrollmentId);
-    
     // Store the enrollment ID in the button for use in other handlers
     unenrollBtn.dataset.enrollmentId = enrollmentId;
     
-    unenrollBtn.addEventListener('click', async (e) => {
+    addManagedListener(unenrollBtn, 'click', async (e) => {
       e.preventDefault();
       await handleUnenrollAction(enrollmentId);
     });
@@ -253,9 +244,7 @@ function setupEventListeners(block, courseId, learnerData) {
     const enrollmentId = learnerData.data.relationships.enrollment.data.id;
     const ratingSection = block.querySelector('.rating-section');
     
-    console.log('Enrollment ID for rating:', enrollmentId);
-    
-    submitRatingBtn.addEventListener('click', async (e) => {
+    addManagedListener(submitRatingBtn, 'click', async (e) => {
       e.preventDefault();
       const stars = block.querySelectorAll('.star-rating .star');
       await handleRatingSubmission(enrollmentId, stars, ratingSection);
@@ -264,7 +253,7 @@ function setupEventListeners(block, courseId, learnerData) {
     // Add click handlers for stars
     const stars = block.querySelectorAll('.star-rating .star');
     stars.forEach((star, index) => {
-      star.addEventListener('click', (e) => {
+      addManagedListener(star, 'click', (e) => {
         e.preventDefault();
         handleStarClick(stars, index);
       });
@@ -276,7 +265,7 @@ function setupEventListeners(block, courseId, learnerData) {
   // Add click handlers for modules
   const moduleItems = block.querySelectorAll('.module-item');
   moduleItems.forEach(moduleItem => {
-    moduleItem.addEventListener('click', async (e) => {
+    addManagedListener(moduleItem, 'click', async (e) => {
       e.preventDefault();
       
       const resourceId = moduleItem.dataset.resourceId;
@@ -347,8 +336,6 @@ async function handleTabSwitch(tabButton, courseId, courseTitle, learnerData, mo
     
     try {
       // Debug: Log the learner data structure
-      console.log('Full learner data:', learnerData);
-      console.log('Learner data relationships:', learnerData?.data?.relationships);
       
       // Extract instanceId from learnerData - try multiple possible paths
       let instanceId = null;
@@ -357,21 +344,18 @@ async function handleTabSwitch(tabButton, courseId, courseTitle, learnerData, mo
       if (learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.loInstance) {
         const instanceData = learnerData.data.relationships.loInstance.data;
         instanceId = instanceData.id;
-        console.log('Found instanceId via loInstance:', instanceId);
       }
       
       // Try loInstanceId as fallback
       if (!instanceId && learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.loInstanceId) {
         const instanceData = learnerData.data.relationships.loInstanceId.data;
         instanceId = instanceData.id;
-        console.log('Found instanceId via loInstanceId:', instanceId);
       }
       
       // Try instance as fallback
       if (!instanceId && learnerData && learnerData.data && learnerData.data.relationships && learnerData.data.relationships.instance) {
         const instanceData = learnerData.data.relationships.instance.data;
         instanceId = instanceData.id;
-        console.log('Found instanceId via instance:', instanceId);
       }
       
       // Try extracting from enrollment data attributes
@@ -380,7 +364,6 @@ async function handleTabSwitch(tabButton, courseId, courseTitle, learnerData, mo
         // Check if enrollment has instance reference
         if (enrollmentData.relationships && enrollmentData.relationships.loInstance) {
           instanceId = enrollmentData.relationships.loInstance.data.id;
-          console.log('Found instanceId via enrollment.loInstance:', instanceId);
         }
       }
       
@@ -393,7 +376,6 @@ async function handleTabSwitch(tabButton, courseId, courseTitle, learnerData, mo
         if (parts.length >= 2) {
           // parts[0] is course:courseId, parts[1] is instanceId
           instanceId = `${parts[0]}_${parts[1]}`;
-          console.log('Extracted instanceId from enrollmentId:', instanceId);
         }
       }
       
@@ -501,7 +483,7 @@ function setupTabEventListeners(block, courseId, courseTitle, learnerData, modul
   const tabButtons = block.querySelectorAll('.tab-button');
   
   tabButtons.forEach(tabButton => {
-    tabButton.addEventListener('click', async (e) => {
+    addManagedListener(tabButton, 'click', async (e) => {
       e.preventDefault();
       await handleTabSwitch(tabButton, courseId, courseTitle, learnerData, moduleData);
     });

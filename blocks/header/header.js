@@ -1,7 +1,6 @@
 import { fetchPlaceholders, getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
-import { getAccessToken } from '../course-overview/api-service.js';
-import { almApiCall } from '../../scripts/alm-token.js';
+import { fetchUserProfile } from '../../scripts/api-service.js';
 
 // Theme Switcher Constants
 const THEME_KEY = 'site-theme';
@@ -265,43 +264,16 @@ async function buildBreadcrumbsFromNavTree(nav, currentUrl) {
   return crumbs;
 }
 
-// Fetch user profile for header
-async function fetchUserProfileForHeader() {
-  try {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-      return null;
-    }
-
-    const response = await almApiCall(`https://learningmanager.adobe.com/primeapi/v2/user`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/vnd.api+json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching user profile for header:', error);
-    return null;
-  }
-}
 
 // Add user dropdown to nav tools
 async function addUserDropdown(navTools) {
   try {
-    // Fetch user profile
-    const userProfile = await fetchUserProfileForHeader();
-    if (!userProfile) {
+    // Fetch user profile using centralized API service
+    const user = await fetchUserProfile();
+    if (!user) {
       return; // Don't show dropdown if no user profile
     }
 
-    const user = userProfile?.data;
     const userName = user?.attributes?.name || 'User';
     const userAvatar = user?.attributes?.avatarUrl || '';
 

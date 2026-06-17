@@ -180,7 +180,6 @@ function extractLearningProgramDataFromCDN(block, lpTitle, lpFormat, lpDescripti
             const baseUrl = window.location.origin;
             courseImageUrl = new URL(courseImageUrl, baseUrl).href;
           }
-          console.log('Found course image:', courseImageUrl);
           currentElement = currentElement.nextElementSibling;
           continue;
         }
@@ -189,7 +188,6 @@ function extractLearningProgramDataFromCDN(block, lpTitle, lpFormat, lpDescripti
       // Check if this is course metadata (contains ● separators)
       if (text.includes('●')) {
         courseMetadata = text;
-        console.log('Found course metadata:', courseMetadata);
         
         // Extract REQUIRED/OPTIONAL flag from metadata
         // Format: "Self Paced REQUIRED ● 47m" or "Self Paced OPTIONAL ● Author ● 1h ● ★★★☆☆ 3"
@@ -223,9 +221,6 @@ function extractLearningProgramDataFromCDN(block, lpTitle, lpFormat, lpDescripti
       
       // Get requirement status from temp storage (set when metadata was parsed)
       const requirementStatus = window.tempCourseRequirement || '';
-      console.log(`Creating course ${courseIndex}: "${text}"`);
-      console.log('Requirement status from temp:', requirementStatus);
-      console.log('Course metadata:', courseMetadata);
       
       currentCourse = {
         id: `course-${courseIndex}`, // Placeholder, will be updated when we find Course ID
@@ -240,7 +235,6 @@ function extractLearningProgramDataFromCDN(block, lpTitle, lpFormat, lpDescripti
         instanceId: null,  // Will be extracted from "Instance ID: Y" paragraph
         modules: []
       };
-      console.log('Course created with isRequired:', currentCourse.isRequired);
       currentModule = null;
       // Reset for next course
       courseImageUrl = '';
@@ -290,11 +284,9 @@ function extractLearningProgramDataFromCDN(block, lpTitle, lpFormat, lpDescripti
           if (courseIdMatch) {
             currentCourse.courseId = courseIdMatch[1];
             currentCourse.id = `course:${courseIdMatch[1]}`; // Update the id format
-            console.log('Extracted Course ID:', currentCourse.courseId);
           }
           if (instanceIdMatch) {
             currentCourse.instanceId = instanceIdMatch[1]; // This will be like "12495374-13216648"
-            console.log('Extracted Instance ID:', currentCourse.instanceId);
           }
         }
         // If no current module, this is course-level data
