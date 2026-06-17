@@ -4,7 +4,7 @@ import { fetchUserProfile } from '../../scripts/api-service.js';
 
 // Theme Switcher Constants
 const THEME_KEY = 'site-theme';
-const THEMES = ['light', 'dark', 'green'];
+const THEMES = ['light', 'dark', 'green', 'linkedin'];
 
 // Theme Switcher Functions
 function getCurrentTheme() {
@@ -59,7 +59,8 @@ function addThemeSwitcher(navTools) {
   const themeNames = {
     light: 'Light Theme',
     dark: 'Dark Theme',
-    green: 'Green Theme'
+    green: 'Green Theme',
+    linkedin: 'LinkedIn Theme'
   };
   
   THEMES.forEach(theme => {
