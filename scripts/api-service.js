@@ -146,8 +146,8 @@ export async function fetchLearningObject(learningObjectId) {
 
 /**
  * Fetch enrollment state
- * @param {string} learningObjectId - Learning object ID
- * @param {string} instanceId - Instance ID
+ * @param {string} learningObjectId - Learning object ID (with or without prefix)
+ * @param {string} instanceId - Instance ID (numeric part only)
  * @returns {Promise<Object>} - Enrollment state
  */
 export async function fetchEnrollmentState(learningObjectId, instanceId) {
@@ -156,8 +156,12 @@ export async function fetchEnrollmentState(learningObjectId, instanceId) {
     return { state: 'NOT_ENROLLED', progressPercent: 0 };
   }
 
-  const enrollmentId = `${learningObjectId}_${instanceId}_${userId}`;
-  const endpoint = `/enrollments/${enrollmentId}?omitDeprecated=true`;
+  // Remove 'course:' or 'learningProgram:' prefix if present
+  const cleanLoId = learningObjectId.replace(/^(course:|learningProgram:)/, '');
+  
+  // The enrollment ID format is: loId_instanceId_userId (without prefixes)
+  const enrollmentId = `${cleanLoId}_${instanceId}_${userId}`;
+  const endpoint = `/enrollments/${enrollmentId}`;
   
   try {
     const data = await apiRequest(endpoint);
