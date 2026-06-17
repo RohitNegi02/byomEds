@@ -1,133 +1,129 @@
 /**
  * Logo block
- * Displays a logo image with optional link
- * Supports theme-based logo switching
+ * Displays a logo image with optional link.
+ * Supports theme-based logo switching driven by the header theme switcher.
+ *
+ * Authoring (EDS):
+ *   Add a link for the destination, then drop one icon per theme, e.g.
+ *   :logo-light: :logo-dark: :logo-green: :logo-linkedin:
+ *   The SVGs must live in the code repo's /icons/ folder (e.g. /icons/logo-linkedin.svg),
+ *   because EDS icons always resolve to ${codeBasePath}/icons/<name>.svg.
  */
 
+const THEMES = ['light', 'dark', 'green', 'linkedin'];
+
 /**
- * Get current theme from document root
+ * Get current theme from the document root.
+ * The header theme switcher sets data-theme on <html> (and removes it for light).
  */
 function getCurrentTheme() {
   return document.documentElement.getAttribute('data-theme') || 'light';
 }
 
 /**
- * Parse logo variants from block content
- * Format: [Logo Text|/logo-light.svg|/logo-dark.svg|/logo-green.svg|/logo-linkedin.svg](/home)
+ * Work out which theme a logo source belongs to from its icon name / filename.
+ * e.g. "logo-linkedin" -> "linkedin", "logo-dark.svg" -> "dark".
+ * Returns null when no theme keyword is present (treated as the default logo).
+ */
+function themeFromName(name) {
+  const lower = (name || '').toLowerCase();
+  return THEMES.find((theme) => lower.includes(theme)) || null;
+}
+
+/**
+ * Parse logo variants from the authored block content.
+ * Reads EDS icons (span.icon > img), <picture> images, and bare <img>.
  */
 function parseLogoVariants(block) {
-  const links = block.querySelectorAll('a');
   const logoData = {
     href: '/',
     text: 'Logo',
     variants: {},
-    hasVariants: false
+    hasVariants: false,
   };
 
-  if (links.length === 0) return logoData;
-
-  const mainLink = links[0];
-  logoData.href = mainLink.href;
-  
-  // Check if link text contains pipe-separated variants
-  const linkText = mainLink.textContent.trim();
-  if (linkText.includes('|')) {
-    const parts = linkText.split('|').map(p => p.trim());
-    logoData.text = parts[0];
-    
-    // Map variants: light, dark, green, linkedin
-    const themeOrder = ['light', 'dark', 'green', 'linkedin'];
-    parts.slice(1).forEach((variant, index) => {
-      if (variant && themeOrder[index]) {
-        logoData.variants[themeOrder[index]] = variant;
-        logoData.hasVariants = true;
-      }
-    });
-  } else {
-    logoData.text = linkText;
+  // Destination + accessible label come from the first link.
+  const link = block.querySelector('a');
+  if (link) {
+    logoData.href = link.getAttribute('href') || link.href || '/';
+    const linkText = link.textContent.trim();
+    if (linkText) logoData.text = linkText;
   }
 
-  // Check for images
-  const pictures = block.querySelectorAll('picture');
-  if (pictures.length > 0) {
-    pictures.forEach((picture, index) => {
-      const img = picture.querySelector('img');
-      if (img && img.src) {
-        const themeOrder = ['light', 'dark', 'green', 'linkedin'];
-        if (index === 0 && !logoData.hasVariants) {
-          // Single image, use for all themes
-          logoData.variants.default = img.src;
-        } else if (themeOrder[index]) {
-          // Multiple images, map to themes
-          logoData.variants[themeOrder[index]] = img.src;
-          logoData.hasVariants = true;
-        }
-      }
-    });
-  }
+  // Collect every candidate logo image in the block.
+  const images = block.querySelectorAll('img');
+  images.forEach((img) => {
+    const src = img.getAttribute('src') || img.src;
+    if (!src) return;
+
+    // Icon name (from EDS decoration) is most reliable; fall back to the filename.
+    const iconName = img.dataset.iconName
+      || src.split('/').pop().replace(/\.[a-z0-9]+$/i, '');
+    const theme = themeFromName(iconName);
+
+    if (theme) {
+      logoData.variants[theme] = src;
+      logoData.hasVariants = true;
+    } else if (!logoData.variants.default) {
+      logoData.variants.default = src;
+    }
+  });
 
   return logoData;
 }
 
 /**
- * Update logo based on current theme
+ * Render / update the logo for the current theme.
  */
 function updateLogo(container, logoData) {
   const currentTheme = getCurrentTheme();
-  const logoSrc = logoData.variants[currentTheme] || logoData.variants.default || logoData.variants.light;
+  const logoSrc = logoData.variants[currentTheme]
+    || logoData.variants.default
+    || logoData.variants.light;
 
   if (logoSrc) {
-    // Image logo
-    const existingImg = container.querySelector('.logo-image');
-    if (existingImg) {
-      existingImg.src = logoSrc;
-    } else {
-      const img = document.createElement('img');
-      img.src = logoSrc;
-      img.alt = logoData.text || 'Logo';
-      img.className = 'logo-image';
+    let img = container.querySelector('.logo-image');
+    if (!img) {
       container.innerHTML = '';
+      img = document.createElement('img');
+      img.className = 'logo-image';
       container.appendChild(img);
     }
-  } else {
-    // Text logo
-    const existingText = container.querySelector('.logo-text');
-    if (!existingText) {
-      container.innerHTML = '';
-      const span = document.createElement('span');
-      span.className = 'logo-text';
-      span.textContent = logoData.text;
-      container.appendChild(span);
-    }
+    img.src = logoSrc;
+    img.alt = logoData.text || 'Logo';
+    return;
+  }
+
+  // No image available: fall back to text.
+  if (!container.querySelector('.logo-text')) {
+    container.innerHTML = '';
+    const span = document.createElement('span');
+    span.className = 'logo-text';
+    span.textContent = logoData.text;
+    container.appendChild(span);
   }
 }
 
 export default function decorate(block) {
   const logoData = parseLogoVariants(block);
 
-  // Clear block
   block.innerHTML = '';
 
-  // Create logo link
   const logoLink = document.createElement('a');
   logoLink.href = logoData.href;
   logoLink.className = 'logo-link';
   logoLink.setAttribute('aria-label', logoData.text || 'Home');
 
-  // Create container for logo content
   const logoContent = document.createElement('div');
   logoContent.className = 'logo-content';
 
   logoLink.appendChild(logoContent);
   block.appendChild(logoLink);
 
-  // Set initial logo
   updateLogo(logoContent, logoData);
 
-  // Listen for theme changes
+  // Re-render when the header theme switcher fires a theme change.
   if (logoData.hasVariants) {
-    window.addEventListener('themechange', () => {
-      updateLogo(logoContent, logoData);
-    });
+    window.addEventListener('themechange', () => updateLogo(logoContent, logoData));
   }
 }
