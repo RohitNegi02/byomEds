@@ -32,7 +32,6 @@ async function handleEnrollmentAction(courseId) {
       const enrollResult = await enrollUser(courseId, instanceId);
       
       if (enrollResult) {
-        alert('Successfully enrolled in the course!');
         // Refresh the page to update the UI
         window.location.reload();
       } else {
