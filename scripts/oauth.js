@@ -16,6 +16,7 @@ function startOAuthFlow() {
   authUrl.searchParams.set('scope', scope);
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('account', envConfig.almAccount);
+  authUrl.searchParams.set('acap_prime_oauth', '1');
 
   // Redirect to Adobe Learning Manager OAuth
   window.location.href = authUrl.toString();

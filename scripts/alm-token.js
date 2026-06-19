@@ -55,7 +55,7 @@ function handleUnauthorized() {
   
   // Trigger OAuth flow
   const redirectUri = window.location.origin + window.location.pathname;
-  const scope = 'learner:read,learner:write';
+  const scope = 'learner:read learner:write';
   const envConfig = window.envConfig;
 
   if (!envConfig || !envConfig.almClientId) {
@@ -71,6 +71,7 @@ function handleUnauthorized() {
   authUrl.searchParams.set('scope', scope);
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('account', envConfig.almAccount);
+  authUrl.searchParams.set('acap_prime_oauth', '1');
 
   // Redirect to Adobe Learning Manager OAuth
   window.location.href = authUrl.toString();
