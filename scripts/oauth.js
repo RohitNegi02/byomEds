@@ -3,7 +3,7 @@ const envConfig = window.envConfig;
 
 function startOAuthFlow() {
   const redirectUri = window.location.origin + window.location.pathname;
-  const scope = 'learner:read,learner:write';
+  const scope = 'learner:read learner:write';
 
   if (!envConfig.almClientId) {
     // OAuth error: Client ID is required
